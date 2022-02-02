@@ -1,0 +1,548 @@
+---
+title: "paw data eda"
+author: "Julia Wrobel"
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
+output:
+  html_document: 
+    code_folding: hide
+    toc: true
+    toc_float: true
+hitheme: tomorrow
+highlighter: highlight.js
+---
+
+
+# Overview
+
+The goal of this analysis is to produce EDA plots for the flode paper.
+
+```{r setup, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(stringr)
+library(viridis)
+library(gridExtra)
+library(splines)
+library(refund)
+library(patchwork)
+
+knitr::opts_chunk$set(echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 9,
+  fig.height = 4,
+  fig.path = '../manuscript/figs/'
+)
+
+theme_set(theme_bw() + theme(legend.position = "none"))
+source(here::here("preprocessing", "estimate_flode_re.R"))
+source(here::here("preprocessing", "utils.R"))
+source(here::here("preprocessing", "search_alpha.R"))
+```
+
+
+# Paw data
+
+```{r data_import}
+data_dir = "/Users/juliawrobel/Data/201803_hantman_trajectories/data"
+load(paste0(data_dir, "/20180418_tidied_data.RDA"))
+```
+
+## data info
+
+Get average lift and grab stats.
+
+```{r}
+
+paw_position %>% 
+  filter(type == "Control") %>%
+  summarize(mean_lift = mean(lift, na.rm = TRUE), 
+            sd_lift = sd(lift, na.rm = TRUE), 
+            mean_grab = mean(grab, na.rm = TRUE), 
+            sd_grab = sd(grab, na.rm = TRUE))
+
+```
+
+
+## data cleaning
+
+Join the datasets. Here we are joining the `seq_train` (neural spike data) and `paw_position` datasets.
+
+```{r}
+observed_data = 
+	left_join(
+		seq_train %>% select(trial, type, gpfa) %>% unnest(cols = c(gpfa)),
+	  paw_position %>% unnest(cols = c(paw_position))) %>% 
+	mutate(sec_since_lift = seconds - lift,
+	       sec_since_grab = seconds - grab) %>% 
+	filter(sec_since_lift > -.05, sec_since_lift < .25,
+				 type == "Control") %>%
+	select(trial, sec_since_lift, px, py, pz) %>% 
+	gather(key = axis, value = observed, px:pz)
+```
+
+It is necessary that the paw data be evaluated on the same evenly spaced grid for each trial In order to obtain this I interpolate the data to an evenly spaced grid with `r D_paw = 30; D_paw` timepoints per trial. I merge the paw position data with the seq train data and crop time to the window of .05 seconds before lift to .25 seconds after lift. Also process GPFA data to the same even grid.
+
+Also process raw spike trains to an even grid in the same time range for plotting. 
+
+* This part of the processing can go into a folder that isn't shared to JASA
+
+```{r}
+make_even_grid = function(data, D_paw = 30){
+	time = seq(-0.05, 0.25, length.out = D_paw)
+	even_fit = approx(data$sec_since_lift, data$value, xout = time, rule = 2)$y
+	
+	tibble(sec_since_lift = time, value = even_fit)
+}
+
+paw_df = 
+	left_join(
+		seq_train %>% select(trial, type, gpfa) %>% unnest(cols = c(gpfa)),
+		paw_position %>% unnest(cols = c(paw_position))) %>% 
+    mutate(sec_since_lift = seconds - lift) %>% 
+    filter(sec_since_lift > -.05, sec_since_lift < .25, type == "Control") %>% 
+	select(trial, type, sec_since_lift, px, py, pz, starts_with("gpfa")) 
+
+even_paw = paw_df %>%
+	select(trial, type, sec_since_lift, starts_with("p")) %>%
+	gather(axis, value, starts_with("p")) %>%
+	nest(data = c(sec_since_lift, value)) %>%
+	mutate(even_data = map(data, make_even_grid)) %>% 
+	unnest(even_data) %>%
+	mutate(time = sec_since_lift - min(sec_since_lift), u = 1) %>%
+	select(trial, axis, sec_since_lift, time, u, value)
+
+even_gpfa = paw_df %>%
+	select(trial, type, sec_since_lift, starts_with("g")) %>%
+	gather(gpfa, value, starts_with("g")) %>%
+	nest(data = c(sec_since_lift, value)) %>%
+	mutate(even_data = map(data, make_even_grid)) %>% 
+	unnest(even_data) %>%
+	mutate(time = sec_since_lift - min(sec_since_lift)) %>%
+	rename(u_gpfa = value) %>%
+	select(trial, time, gpfa, u_gpfa) %>%
+	spread(gpfa, u_gpfa)
+	
+
+paw_df = left_join(even_paw, even_gpfa)
+
+firing_df = 
+	left_join(
+		seq_train %>% select(trial, type, neuron_fire) %>% 
+		  filter(type == "Control") %>%
+		  mutate(row = row_number()) %>% unnest(cols = c(neuron_fire)),
+		paw_position %>% filter(type == "Control") ) %>% 
+    #mutate(sec_since_lift = seconds - lift) %>% 
+    #filter(sec_since_lift > -.05, sec_since_lift < .25) %>% 
+  filter(seconds < 2) %>%
+  #mutate(time = sec_since_lift - min(sec_since_lift)) %>%
+	#select(row, trial, type, sec_since_lift, time, seconds, starts_with("loc")) 
+  arrange(type) %>%
+  select(row, trial, seconds, starts_with("loc"))
+
+```
+
+
+## data and covariates
+
+Below are plots of the paw trajectories and gpfa values.
+
+* expand grid for neuron firing rates to fill full space
+* change time scale for neuron firing rates to same time scale for everything else.
+
+This is figure 1 in the manuscript.
+
+```{r fig_data_eda, fig.width = 10, fig.height= 8}
+paw_plot = paw_df %>%
+  mutate(axis = case_when(
+    axis == "px" ~ "x-axis",
+    axis == "py" ~ "y-axis",
+    axis == "pz" ~ "z-axis"
+  )) %>%
+	ggplot(aes(sec_since_lift, value, group = trial)) +
+	geom_line(alpha = 0.25) +
+	labs(x = "seconds since lift", y = "position") +
+	facet_wrap(~axis, scales = "free_y") #+
+  #theme(axis.title.x = element_blank())
+
+# gonna need to map this to an even grid
+neuron_plot = firing_df %>%
+    select(row, trial, seconds, loc_02, loc_06, loc_09) %>%
+    gather(key = loc, value = value, starts_with("loc")) %>%
+    mutate(spike = as.numeric( value > 0),
+           loc = str_replace(loc, "loc_0", "location ")) %>%
+    ggplot(aes(x = seconds, y = row)) + 
+    geom_tile(aes(fill = factor(spike))) +
+    scale_fill_viridis(discrete = TRUE) + 
+    #scale_fill_manual(values = c("lightblue", "darkblue")) +
+		labs(y = "trial") + 
+		facet_grid(.~loc) + 
+    theme(legend.position = "none",
+          axis.ticks=element_blank(),
+          axis.line=element_blank(),
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) +
+    scale_x_continuous(expand=c(0,0)) + 
+    scale_y_continuous(expand=c(0,0)) 
+
+
+gpfa_plot = paw_df %>% 
+	filter(axis == "px") %>%
+	gather(gpfa, x_value, gpfa_1:gpfa_5) %>%
+  mutate(gpfa = str_replace(gpfa, "_", " ")) %>%
+	ggplot(aes(sec_since_lift, x_value, group = trial)) +
+	geom_line(alpha = 0.2) +
+	labs(x = "seconds since lift", y = "value") +
+	facet_wrap(~ gpfa, scales = "free_y", ncol = 5)
+
+
+#p1 + (p2 + p3) + p4 + plot_layout(ncol = 1)
+(paw_plot + neuron_plot) + gpfa_plot + plot_layout(ncol = 1 )
+```
+
+Below is version of the figure for slides.
+
+```{r paw_ppt}
+firing_df %>%
+    select(row, trial, seconds, loc_02, loc_06, loc_09) %>%
+    gather(key = loc, value = value, starts_with("loc")) %>%
+    mutate(spike = as.numeric( value > 0),
+           loc = str_replace(loc, "loc_0", "location ")) %>%
+    ggplot(aes(x = seconds, y = row)) + 
+    geom_tile(aes(fill = factor(spike))) +
+    scale_fill_viridis(discrete = TRUE) + 
+    #scale_fill_manual(values = c("lightblue", "darkblue")) +
+		labs(y = "trial") + 
+		facet_grid(.~loc) + 
+    theme(legend.position = "none") +
+    scale_x_continuous(expand=c(0,0)) + 
+    scale_y_continuous(expand=c(0,0)) 
+```
+
+
+version of the gpfa for slides.
+
+```{r gpfa_ppt}
+gpfa_plot
+```
+
+# Paw analysis
+
+We now analyze the paw data.
+
+## model implementation
+
+We run the model on the three axes separately. First we do a grid search to find the best initial value of $\alpha$. For the grid search we run the model without random effects, choosing a particular value of $\alpha$ and using the observed initial positions to calculate the value of the loss function at that particular $\alpha$.
+
+```{r}
+paw_x = paw_df %>%
+  filter(axis == "px") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+paw_y = paw_df %>%
+  filter(axis == "py") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+paw_z = paw_df %>%
+  filter(axis == "pz") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+```
+
+
+### x axis 
+
+Run the flode model
+
+```{r, eval = FALSE}
+
+# 25 iterations was the sweet spot here- why?
+px_results = estimate_flode_re(paw_x, alpha0 = 3, 
+                               Kt = 10,
+                               forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																								"gpfa_4", "gpfa_5"), 
+    															 max_iter = 500, 
+    															 tol = 0.0000001, 
+    															 update_y0 = FALSE,
+    															 mle = TRUE,
+    															 lambda_init = 100)
+
+save(px_results, file = "px_results.RData")
+
+px_results$data %>%
+  ggplot(aes(time, value, group = trial)) + 
+  geom_line(alpha = 0.5, color = "gray") +
+  geom_line(aes(y = yhat), alpha = 0.3, color = "indianred") +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+  facet_wrap(~ axis, scales = "free")
+
+px_results$data %>% 
+  ggplot(aes(time, value - yhat)) + 
+  geom_point(alpha = 0.1, size = 0.5) +
+  facet_wrap(~ axis)
+
+plot(px_results$sse_vec)
+
+px_results$beta %>%
+  gather(beta, value, starts_with("beta")) %>%
+  ggplot(aes(time, value)) + geom_line() + facet_wrap(~beta)
+```
+
+### y axis 
+
+Run the flode model
+
+```{r, eval = FALSE}
+py_results = estimate_flode_re(paw_y, alpha0 = 3.25, 
+                               Kt = 10,
+                               forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																								"gpfa_4", "gpfa_5"), 
+    															 max_iter = 11, 
+    															 tol = 0.0000001, 
+    															 update_y0 = TRUE,
+    															 mle = TRUE,
+    															 lambda_init = 10)
+# sse = 1569,  lambda = 1204
+    # minimum SSE at 16 iterations
+save(py_results, file = "py_results_25.RData")
+ 
+```
+
+
+### z axis 
+
+Run the flode model
+
+```{r, eval = FALSE}
+pz_results = estimate_flode_re(paw_z, alpha0 = 3, 
+                               Kt = 10,
+                               forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																								"gpfa_4", "gpfa_5"), 
+    															 max_iter = 50, 
+    															 tol = 0.0000001, 
+    															 update_y0 = FALSE,
+    															 mle = TRUE,
+    															 lambda_init = 3000)
+
+ ## sse:15 iterations, 2869
+save(pz_results, file = "pz_results.RData")
+
+```
+
+
+
+## results
+
+load data
+
+```{r}
+load("pz_results_25.RData")
+load("py_results_25.RData")
+load("px_results_25iter.RData")
+#load("px_results.RData")
+```
+
+
+Organize fits and surfaces.
+
+```{r}
+x_df = px_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "px") 
+
+y_df = py_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "py")
+
+z_df = pz_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "pz")
+
+
+flode_results = bind_rows(x_df, y_df, z_df) %>%
+  mutate(time = time * 0.3)
+
+# betas
+beta_results = bind_rows(px_results$beta %>% mutate(axis = "px"),
+          py_results$beta %>% mutate(axis = "py"),
+          pz_results$beta %>% mutate(axis = "pz")) %>%
+  mutate(time = time * 0.3)
+
+
+## for surfaces just look at paw X
+# now get surfaces
+make_surface_df = function(data, beta_num){
+  surface = data$surface[[beta_num]]
+  
+  surface %>% as_tibble() %>%
+    mutate(t = attributes(surface)$t) %>%
+    gather(s, value, starts_with("s")) %>%
+    arrange(t) %>%
+    mutate(s = rep(attributes(surface)$s, 50),
+           label = paste0("beta", beta_num - 1))
+}
+
+surface_df = map_dfr(2:6, make_surface_df, data = px_results)
+```
+
+### fits and resid
+
+```{r}
+fits = flode_results %>%
+  ggplot(aes(time, value, group = trial)) + 
+  geom_line(alpha = 0.5, color = "gray") +
+  geom_line(aes(y = yhat), alpha = 0.3, color = "indianred") +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+  facet_wrap(~ axis, scales = "free")
+
+resid = flode_results %>%
+  ggplot(aes(time, value - yhat)) + 
+  geom_point(alpha = 0.1, size = 0.5) +
+  facet_wrap(~ axis)
+
+fits + resid + plot_layout(ncol = 1)
+```
+
+
+```{r fits_ppt}
+flode_results %>%
+  ggplot(aes(time, value, group = trial)) + 
+  geom_line(alpha = 0.5, color = "gray") +
+  geom_line(aes(y = yhat), alpha = 0.3, color = "indianred") +
+  facet_wrap(~ axis, scales = "free")
+```
+
+
+### delta
+
+```{r fig_data_fits, fig.height= 10}
+delta = flode_results %>%
+  ggplot(aes(time, delta, group = trial)) + 
+  geom_line(alpha = 0.1) +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+  facet_wrap(~ axis)
+
+deltaStar = flode_results %>%
+  ggplot(aes(time, deltaStar, group = trial)) + 
+  geom_line(alpha = 0.1) +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+  facet_wrap(~ axis)
+
+fits  +  delta +  deltaStar + plot_layout(ncol = 1)
+```
+
+### beta
+
+```{r fig_data_beta}
+beta_results %>%
+  gather(beta, value, starts_with("beta"))  %>%
+  ggplot(aes(time, value, group = axis, color = axis)) + geom_line() +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "black") +
+  facet_wrap(~ beta) +
+  theme(legend.position = "bottom")
+
+```
+
+
+### y0
+
+```{r}
+p1 = px_results$y0_mat %>% as_tibble() %>%
+  mutate(trial = row_number()) %>% 
+  gather(iter, value, starts_with("iter")) %>%
+  mutate(iter = as.numeric(str_remove(iter, "iter_"))) %>%
+  ggplot(aes(iter, value, group = trial)) + geom_line(alpha = 0.2) +
+  ggtitle("x axis")
+
+p2 = py_results$y0_mat %>% as_tibble() %>%
+   mutate(trial = row_number()) %>% 
+  gather(iter, value, starts_with("iter")) %>%
+  mutate(iter = as.numeric(str_remove(iter, "iter_"))) %>%
+  ggplot(aes(iter, value, group = trial)) + geom_line(alpha = 0.2) +
+  ggtitle("y axis")
+
+p3 = pz_results$y0_mat %>% as_tibble() %>%
+   mutate(trial = row_number()) %>% 
+  gather(iter, value, starts_with("iter")) %>%
+  mutate(iter = as.numeric(str_remove(iter, "iter_"))) %>%
+  ggplot(aes(iter, value, group = trial)) + geom_line(alpha = 0.2) +
+  ggtitle("z axis")
+
+p1 + p2 + p3
+```
+
+
+### surfaces
+
+```{r fig_data_surfaces}
+surface_df %>%
+  mutate(value = ifelse(s <= t, value, NA),
+         s = s * 0.3,
+         t = t * 0.3) %>%
+  ggplot(aes(s, t)) + 
+  geom_tile(aes(fill = value, col = value)) + 
+  scale_fill_viridis_c() +
+  scale_colour_viridis_c() +
+  facet_wrap(~ label, , ncol = 5) +
+  theme(legend.position = "bottom")
+
+
+```
+
+
+```{r fig_surfaces_yzaxis, fig.height = 10}
+
+surface_df = map_dfr(2:6, make_surface_df, data = py_results)
+
+y = surface_df %>%
+  mutate(value = ifelse(s <= t, value, NA),
+         s = s * 0.3,
+         t = t * 0.3) %>%
+  ggplot(aes(s, t)) + 
+  geom_tile(aes(fill = value, col = value)) + 
+  scale_fill_viridis_c() +
+  scale_colour_viridis_c() +
+  facet_wrap(~ label, , ncol = 5) +
+  theme(legend.position = "bottom")
+
+surface_df = map_dfr(2:6, make_surface_df, data = pz_results)
+
+z = surface_df %>%
+  mutate(value = ifelse(s <= t, value, NA),
+         s = s * 0.3,
+         t = t * 0.3) %>%
+  ggplot(aes(s, t)) + 
+  geom_tile(aes(fill = value, col = value)) + 
+  scale_fill_viridis_c() +
+  scale_colour_viridis_c() +
+  facet_wrap(~ label, , ncol = 5) +
+  theme(legend.position = "bottom")
+
+y + z + plot_layout(ncol = 1)
+
+```
+
+
+
+# Questions
+
+* SSE goes up over iterations. Why? It shouldn't be getting worse over time..
+* Why is the SSE I print here different from the one calculated as the sum of residuals?
+  * It could be that I'm printing the wrong SSE and that's why it's going up. 
+  * What is alpha error doing with each iteration?
+* How are beta and delta changing with each iteration when it goes up like this?
+
+# Comments
+
+Right now the issue with the data analysis is that the SSE actually starts going up after the 15th or so iteration. As this happens, the values of delta that are calculated end up capturing less of the variability in the data. The estimates for y0 are also very bad. One thought is that estimates of y0 become bad because the estimates of betas are unstable, and that second derivative penalization may help.

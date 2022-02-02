@@ -45,9 +45,12 @@
 \usepackage{natbib}
 
 
-% Pandoc syntax highlighting
 
-% Pandoc citation processing
+% tightlist command for lists without linebreak
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
 
 
 
@@ -55,8 +58,8 @@
 %% the square bracket argument will send term to running head in
 %% preprint, or running foot in reprint style.
 
-\title[A subtitle goes on another line]{Modeling trajectories using
-functional linear first-order differential equations}
+\title[]{Modeling trajectories using functional linear first-order
+differential equations}
 
 % ie
 %\title[JASA/Sample JASA Article]{Sample JASA Article}
@@ -66,15 +69,25 @@ functional linear first-order differential equations}
 \author{Julia Wrobel}
 % ie
 %\affiliation{Department1,  University1, City, State ZipCode, Country}
-\affiliation{Colorado School of Public Health}
+\affiliation{Department of Biostatistics and Informatics, University of
+Colorado Anschutz Medical Campus}
 %% for corresponding author
 \email{julia.wrobel@cuanschutz.edu}
+%% for additional information
+
+\author{Jian-Zhong Guo}
+% ie
+%\affiliation{Department1,  University1, City, State ZipCode, Country}
+\affiliation{Janelia Research Campus, Howard Hughes Medical Institute}
+%% for corresponding author
+
 %% for additional information
 
 \author{Jeff Goldsmith}
 % ie
 %\affiliation{Department1,  University1, City, State ZipCode, Country}
-\affiliation{Columbia University Mailman School of Public Health}
+\affiliation{Department of Biostatistics, Mailman School of Public
+Health, Columbia University}
 %% for corresponding author
 
 %% for additional information
@@ -87,7 +100,7 @@ functional linear first-order differential equations}
 
 %% For preprint only,
 %  optional, if you want want this message to appear in upper left corner of title page
-\preprint{Wrobel, JASA}
+
 
 %ie
 %\preprint{Author, JASA}
@@ -103,9 +116,10 @@ functional linear first-order differential equations}
 % ``novel'' in the abstract. An article usually includes an abstract, a
 % concise summary of the work covered at length in the main body of the
 % article.
-Put your abstract here. Abstracts are limited to 200 words for regular
-articles and 100 words for Letters to the Editor. Please no personal
-pronouns, also please do not use the words
+A dynamical systems approach to modeling the relationship between the
+motor cortex and skilled movement. Abstracts are limited to 200 words
+for regular articles and 100 words for Letters to the Editor. Please no
+personal pronouns, also please do not use the words
 \texttt{new\textquotesingle{}\textquotesingle{}\ and/or}novel'\,' in the
 abstract. An article usually includes an abstract, a concise summary of
 the work covered at length in the main body of the article.
@@ -142,7 +156,7 @@ the motor cortex \citep{guo2015, sauerbrei2018}.
 
 To better quantify how brain activity affects current and future paw
 position, we need a method that (1) allows future position to depend on
-past but not future neural firing rate, (2) allows future position to be
+past but not future neural spike times, (2) allows future position to be
 affected by initial position, (3) has parameters that model the
 relationship between the paw trajectory and the brain as a dynamical
 system of inputs and outputs, the state of which evolves over time, and
@@ -194,7 +208,7 @@ trial, and data is linearly shifted so that the timing of lift for each
 trial is aligned.
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_eda-1} \caption{Top row: Paw trajectories along $x$, $y$, and $z$ axes for 147 trials. Middle row: neural firing rates for 3 of the 25 neurons. Each row is a trial and each column is a point in time, and dark or light shading indicates that a neuron is off or on, respectively, at that point in time. After auditory cue, neurons show light activation at location 2, high activation at location 6, and dampening in activation at location 9. Bottom row: The five factors from Gaussian process factor analysis, shown for all 147 trials.}\label{fig:flode_data}
+\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_eda-1} \caption{Top row: Paw trajectories along $x$, $y$, and $z$ axes for 147 trials. Middle row: neural spike times for 3 of the 25 neurons. Each row is a trial and each column is a point in time, and dark or light shading indicates that a neuron is off or on, respectively, at that point in time. After auditory cue, neurons show light activation at location 2, high activation at location 6, and dampening in activation at location 9. Bottom row: The five factors from Gaussian process factor analysis, shown for all 147 trials.}\label{fig:flode_data}
 \end{figure}
 
 The top row of Figure (\ref{fig:flode_data}) shows the paw positions
@@ -203,7 +217,7 @@ after lift. Across axes, paw position at time \(t\) depends on initial
 paw position at the start of the trial. The middle row of Figure
 (\ref{fig:flode_data}) shows heat maps of the first 2 seconds of neural
 activity for 3 of the 25 neurons, which were chosen because they are
-representative of patterns seen across neurons. In figures showing
+representative of patterns seen across neurons. In figures showing these
 neural spike times, each row is a trial and each column is a point in
 time; dark or light shading indicates that a neuron is off or on,
 respectively. After the auditory cue at 0.5 seconds, neurons at location
@@ -218,17 +232,19 @@ decomposing noisy neural spiking activity into smooth low-dimension
 neural trajectories \citep{yu2009}. From a neurobiological perspective,
 extracting emergent patterns in the motor cortex using GPFA is a better
 way of assessing how neural activity drives behavior than using the raw
-neural firing data, because it increases generalizability across neurons
+neural spike times because it increases generalizability across neurons
 and trials. From a statistical perspective, GPFA also reduces risk of
-collinearity when using the neural firing rates as covariates in a
+collinearity when using the neural spike times as covariates in a
 regression setting.
 
 Previous work used initial position and neural activity data to predict
 paw trajectories for held-out trials. However, this work did not allow
 for the relationship between position and neural activity to vary over
 time, and did not enhance interpretation of this system of inputs and
-outputs. We describe our model below; this work introduces a novel
-regression method that is well-suited to our scientific context.
+outputs
+(\textcolor{red}{clarify what you mean here. Be more explicit about what new questions you are answering}).
+We describe our model below; this work introduces a novel regression
+method that is well-suited to our scientific context.
 
 \hypertarget{flode-model}{%
 \subsection{flode model}\label{flode-model}}
@@ -255,11 +271,11 @@ y'_i(t) = -\alpha y_i(t) + \delta_i(t) + \mathcal{B}_0(t) + \sum_{p = 1}^P \math
 
 \noindent where \(y_i(t)\) and \(y'_i(t)\) are the paw position and
 first derivative of paw position (velocity) at time \(t\),
-\(x_{ip}(t), p \in 1\ldots P\) are trial-specific forcing functions, and
-\(\alpha\), \(\delta_i(t)\), and \(\mathcal{B}_p(t), p\in 0\ldots P\)
-are parameters to be estimated from the data. Forcing functions,
-analogous to covariates in a traditional regression model, are external
-input forces that act on the ODE system.
+\(x_{ip}(t), p \in 1\ldots P\) are trial-specific \emph{forcing
+functions}, and \(\alpha\), \(\delta_i(t)\), and
+\(\mathcal{B}_p(t), p\in 0\ldots P\) are parameters to be estimated from
+the data. Forcing functions, analogous to covariates in a traditional
+regression model, are external input forces that act on the ODE system.
 
 This is a buffered system, meaning the response time is longer than the
 time interval in which the input changes. The scalar parameter
@@ -273,17 +289,17 @@ functions that measure the impact of changes in the forcing function
 at time \(t\), \(y'_i(t)\), given a one unit change in forcing function
 \(x_{ip}(t)\). \(\mathcal{B}_0(t)\) and \(\delta_i(t)\) are the
 population-level and trial-specific intercepts, respectively. The
-\(\delta_i(t)\) terms capture residual within-trial correlation; while
+\(\delta_i(t)\) terms capture residual within-trial correlation. While
 much of fine motor control is known to be driven by the motor cortex,
-other brain regions also contribute to the paw reaching motion, and the
-\(\delta_i(t)\) term is intended to capture changes in position driven
-by unmeasured influences.
+other brain regions such as the cerebellum also contribute to the paw
+reaching motion \citep{becker2020}, and the \(\delta_i(t)\) term is
+intended to capture changes in position driven by unmeasured influences.
 
 Many systems of differential equations cannot be solved analytically,
 which makes traditional statistical estimation techniques with the
-observed data \(Y\) as the outcome challenging. However, the class of
-ODEs we consider has a solution, which we parameterize in terms of the
-initial value, given by
+observed data \(Y\) as the outcome challenging. The class of ODEs we
+consider has a solution, which we conveniently parameterize in terms of
+the initial value. Our solution is given by
 
 \begin{equation}
 \label{eq:flode_mod}    
@@ -299,7 +315,9 @@ initial position \(y_i(0)\).
 
 The \emph{flode} model is a first-order linear differential equation,
 which reflects the biological process that is hypothesized to generate
-the observed data. To familiarize readers with ordinary differential
+the observed data. The model has two forms: the differential form in
+Equation (\ref{eq:flode_deriv}) and the integrated form in Equation
+(\ref{eq:flode_mod}). To familiarize readers with ordinary differential
 equations and their use in statistics, we review the ODE literature in
 Section \ref{sec:odes}. An overview of the functional data analysis
 literature dedicated to regression, provided in Section \ref{sec:fda},
@@ -317,16 +335,13 @@ leading to widespread popularity for modeling dynamical systems in
 physics, biology, neuroscience, and other disciplines. First-order ODEs,
 which incorporate only the first derivative of \(y\), follow the form
 given in Equation (\ref{eq:flode_deriv}), though the \(\delta_i(t)\)
-term we include is unconventional.
-
-Equation (\ref{eq:flode_deriv}) is also said to be a linear differential
-equation because its right hand side can be written as a linear
-combination of \(y\) and terms that do not contain \(y\)
-\citep{tennenbaum1985}. Though more complex ODEs are possible, such as
-those of higher order or with nonlinearity, we believe the simpler model
-can capture the dynamics of our data. When analytically solvable, most
-ODEs do not have a unique solution. It is therefore common, and useful
-for our data setting, to solve in terms of the initial value \(y(0)\).
+term we include is unconventional. Equation (\ref{eq:flode_deriv}) is
+also said to be a linear differential equation because its right hand
+side can be written as a linear combination of \(y\) and terms that do
+not contain \(y\) \citep{tennenbaum1985}. When analytically solvable,
+most ODEs do not have a unique solution. It is therefore common, and
+useful for our data setting, to solve in terms of the initial value
+\(y(0)\).
 
 Most applications of ODEs in science and engineering focus on
 restrictive rather than general settings, in part because parameter
@@ -336,18 +351,18 @@ popularity. \cite{chen2017} reconstructs gene regulatory networks by
 estimating sparse nonlinear ODEs for noisy gene expression data,
 building on previous work \citep{lu2011, henderson2014}.
 
-In their instant classic Dynamic Data Analysis, \cite{ramsay2017}
-conceptualize dynamical systems as data-driven statistical models. The
-book provides a framework for estimating a large class of differential
-equations, as well as an excellent overview of ODE-based models that
-expands on earlier work from \cite{ramsay2007} for parameter estimation
-in nonlinear ODEs. Separate estimation frameworks are provided for
-linear and nonlinear ODEs though both involve a tradeoff between the
-best fit to a particular prespecified ODE and a smooth fit to the data,
-enforced using B-spline expansions. While this general framework is
-well-suited to estimate parameters for a single realization of an ODE,
-it does not accommodate multiple trials or the complexities that arise
-in that case.
+In their book Dynamic Data Analysis, \cite{ramsay2017} conceptualize
+dynamical systems as data-driven statistical models. The book provides a
+framework for estimating a large class of differential equations, as
+well as an excellent overview of ODE-based models that expands on
+earlier work from \cite{ramsay2007} for parameter estimation in
+nonlinear ODEs. Separate estimation frameworks are provided for linear
+and nonlinear ODEs though both involve a tradeoff between the best fit
+to a particular prespecified ODE and a smooth fit to the data, enforced
+using B-spline expansions. While this general framework is well-suited
+to estimate parameters for a single realization of an ODE, it does not
+accommodate multiple trials or the complexities that arise in such
+cases.
 
 \hypertarget{functional-regression-models}{%
 \subsection{Functional regression
@@ -370,19 +385,20 @@ predictor through integration of a coefficient surface
 
 Some special cases of function-on-function regression include the linear
 functional concurrent model \citep{fan2008, goldsmith2017} and the
-historical functional regression model \citep{malfait2003}. The
-concurrent model uses the current value of the predictor to measure the
-response at each time, but doesn't allow the covariates to affect future
-values of the response. The historical functional model allows the
-response at time \(t\) to be influenced only by the predictors up to
+historical functional regression model \citep{malfait2003, leroux2018}.
+The concurrent model uses the current value of the predictor to measure
+the response at each time, but doesn't allow the covariates to affect
+future values of the response. The historical functional model allows
+the response at time \(t\) to be influenced only by the predictors up to
 time \(t\); this is ideal for data where the response and predictor are
 measured on the same domain, and prevents future values of the
 predictors from influencing the present value of the response. Advances
 in functional regression and accompanying software allow for historical
 functional regression models with scalar and functional covariates, as
 well as functional trial-specific random effects
-\citep{scheipl2015, scheipl2016, refund}. The historical model with
-trial-specific random intercept \(\gamma_i(t)\) is given by
+\citep{scheipl2015, scheipl2016, refund}, and nonlinear functional
+regresion models fit using neural nets \citep{rao2021}. The historical
+model with trial-specific random intercept \(\gamma_i(t)\) is given by
 
 \begin{equation}
 \label{eq:fhist_mod}    
@@ -424,7 +440,8 @@ literature. Explicitly incorporating initial position into a functional
 regression context is both critical for our dynamical systems approach
 and a novel contribution in its own right. Finally, the \emph{flode}
 model is nonlinear in its parameter \(\alpha\), a development which
-other functional regression methods haven't directly addressed.
+other functional regression methods haven't directly
+addressed.\textcolor{red}{Jeff, are these arguments convincing enough?}
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
@@ -520,7 +537,7 @@ Naturally, on a discrete grid the integral defined above needs to be
 approximated numerically. For numeric integration we use a Riemannian
 approach, but other approaches would be reasonable as well.
 
-We assume both the spline coefficients for the trial-specific intercept,
+We assume the spline coefficients for the trial-specific intercept,
 \(\mathbf{d}_i\), and the white noise, \(\epsilon_i(t)\), are random and
 have the following distributions
 
@@ -533,7 +550,7 @@ observed data given the random effects,
 \[Y_i| \mathbf{d}_i \sim N\left(y_{i0}^* + \mathcal{D}^*\mathbf{d}_i+  \mathbf{x}_i^*\mathbf{b}, \sigma^2I_D \right).\]
 
 \noindent Penalization is a popular technique to avoid overfitting in
-functional models which we emply here for both random and fixed effect
+functional models which we employ here for both random and fixed effect
 spline coefficients. For fixed effect spline coefficients
 \(\mathbf{b}_p; p\in 0,\ldots,P\), we assume
 \(\mathbf{b}_p \sim N(0, \lambda_{b,p}\mathcal{P}^{-1})\), which
@@ -541,12 +558,11 @@ introduces a smooth penalty on the coefficient functions. Similarly, we
 assume the random intercept variance is
 \(\Sigma_{Kt\times Kt} = \lambda_d\mathcal{P}^{-1}\). Here
 \(\mathcal{P}^{-1}\) is a known penalty matrix that is shared across
-fixed and random effects to enforce a common penalty structure.
-
-We estimate the buffering parameter \(\alpha\), variance parameters
+fixed and random effects to enforce a common penalty structure. We
+estimate the buffering parameter \(\alpha\), variance parameters
 \(\sigma^2\) and \(\lambda\), true initial positions \(y_i(0)\), and
 spline coefficients \(\mathbf{b}\) and \(\mathbf{d}_i\) using the
-expectation-maximization algorithm described in below. The algorithm
+expectation-maximization algorithm described below. The algorithm
 incorporates a nonlinear least squares step to optimize the \(\alpha\)
 parameter.
 
@@ -577,12 +593,12 @@ When the random effects \(\mathbf{d}_i\) are known, the MLE of
 \(\mathbf{\Phi}\) maximizes the joint log-likelihood
 
 \begin{eqnarray*}
-l(\mathbf{\Phi})) &=& \log p(Y,  \mathbf{d} ; \mathbf{\Phi})\\
+l(\mathbf{\Phi}) &=& \log p(Y,  \mathbf{d} ; \mathbf{\Phi})\\
 &=&  \log p(Y|  \mathbf{d} ; \mathbf{\Phi}) + \log p(\mathbf{d}; \mathbf{\Phi}) + \sum_{p = 0}^P\log p(\mathbf{b}_p; \mathbf{\Phi})\\
 &=&  \log p\left\{Y|  \mathbf{d} ; \alpha, \mathbf{b}, y_i(0), \sigma^2\right\} + \log p(\mathbf{d} ; \lambda_d) + \sum_{p = 0}^P\log p(\mathbf{b}_p ; \lambda_{b, p}).
 \end{eqnarray*}
 
-\noindent This leads to the following fixed effects
+\noindent This leads to the following fixed effects:
 
 \begin{eqnarray*}
 \hat{\alpha} &=& \underset{\alpha}{\mathrm{argmin }}\epsilon^T\epsilon\\[5mm]
@@ -599,15 +615,13 @@ and \(1_{D}\) is a length \(D\) column vector with each entry equal to
 1. When not indexed by \(i\), the vectors \(Y\) and \(y_0^*\) denote
 length \(ND\) stacked forms of their trial-specific length \(D\)
 counterparts, \(Y_i\) and \(y_{i0}^*\). Similarly, \(\mathbf{d}\) is a
-stacked length \(NK_t\) vector, and \(\mathbf{x}^*\) and \$
-\bm{\mathcal{D}}\^{}*\$ are stacked \(ND \times K_t\) matrices. The
+stacked length \(NK_t\) vector, and \(\mathbf{x}^*\) and
+\(\bm{\mathcal{D}}^*\) are stacked \(ND \times K_t\) matrices. The
 residual sum of squares, \(\epsilon^T\epsilon\), is given by
 
 \begin{eqnarray*}
-\epsilon^T\epsilon &=& (Y- y_{0}^* - \bm{\mathcal{D}}^*<\mathbf{d}> -  \mathbf{x}^*\mathbf{b})^T(Y - y_{0}^* - \bm{\mathcal{D}}^*<\mathbf{d}> -  \mathbf{x}^*\mathbf{b})\\
-&=& Y^TY - 2Y^T\left(y_{0}^* + \bm{\mathcal{D}}^*<\mathbf{d}> + \mathbf{x}^*\mathbf{b}\right) + y_{0}^{*T}
-y_{0}^* + 2 y_{0}^{*T}\left( \bm{\mathcal{D}}^*<\mathbf{d}> + \mathbf{x}^*\mathbf{b}  \right) \\
-&+& \left( \mathbf{x}^*\mathbf{b}\right)^T\left( \mathbf{x}^*\mathbf{b}\right) + 2 \left( \mathbf{x}^*\mathbf{b}\right)^T \bm{\mathcal{D}}^*<\mathbf{d}> + <\mathbf{d}^T\bm{\mathcal{D}}^{*T}\bm{\mathcal{D}}^*\mathbf{d}>.
+<\epsilon^T\epsilon> &=& (Y- y_{0}^* - \bm{\mathcal{D}}^*<\mathbf{d}> -  \mathbf{x}^*\mathbf{b})^T(Y - y_{0}^* - \bm{\mathcal{D}}^*<\mathbf{d}> -  \mathbf{x}^*\mathbf{b})\\
+&=& (Y- y_{0}^* -\mathbf{x}^*\mathbf{b})^T(Y- y_{0}^* -\mathbf{x}^*\mathbf{b}) - 2(Y- y_{0}^* -\mathbf{x}^*\mathbf{b})^T\bm{\mathcal{D}}^*<\mathbf{d}> +<\mathbf{d}^T\bm{\mathcal{D}}^{*T}\bm{\mathcal{D}}^*\mathbf{d}>.
 \end{eqnarray*}
 
 \noindent The notation \(<\ldots>\) represents the expected values of
@@ -639,7 +653,8 @@ and
 respectively. We iterate between the \(M\)-step and the \(E\)-step to
 obtain a solution. The algorithm converges when the squared difference
 between the current estimate of \(\widehat{\mathbf{\Phi}}\) and its
-value in the previous iteration become arbitrarily small.
+value in the previous iteration become arbitrarily small
+\textcolor{red}{Need to confirm that convergence actually occurs in current version of code}.
 
 The random intercept in the \emph{flode} model is included to capture
 residual within-trial correlation in the paw trajectories. If one is
@@ -652,10 +667,19 @@ without the \(E\)-step.
 \subsection{Choice of penalty matrix and initial
 values}\label{choice-of-penalty-matrix-and-initial-values}}
 
-We choose a penalty matrix commonly used in functional data analysis
-\citep{eilers1996, goldsmith2016}. Here we also detail how we initialize
-variance parameters \(\lambda\), as well as other parameters. For true
-initial position we initialize using observed initial position\}.
+We choose a penalty matrix, \(\mathcal{P}\), commonly used in functional
+data analysis that enforces smoothness in estimated functions by
+penalizing the second derivative. See \cite{eilers1996} and
+\cite{goldsmith2016} for detail on construction of \(P\)
+\textcolor{red}{Should I be more explicit here? If so, see goldsmith2016 pg 10}.
+Here we also detail how we initialize variance parameters \(\lambda\),
+as well as other parameters. For true initial position we initialize
+using observed initial position.
+\textcolor{red}{Do more to explain how parameters are initialized. Also, combine with section below? Also explain initialization of the initial value $y_{i0}$ using the observed value}.
+
+\textcolor{red}{
+To ensure $\mathcal{P}$ is full rank we follow Goldsmith and Kitago and use $\mathcal{P} = a\mathcal{P}_0 + (1-a)\mathcal{P}_2$, where $\mathcal{P}_0$ and $\mathcal{P}_2$ are the matrices corresponding to the zeroth and second derivative penalties.  The $\mathcal{P}_2$ induces smoothness but is not invertible, whereas $\mathcal{P}_0$ is the identity matrix and induces general shrinkage. Combining these two and selecting $0\le a \le 1$ to be small ($a \le 0.01$) ensures that $\mathcal{P}$ is full rank and enforces smoothness rather than shrinkage. Check that language isn't too similar as that paper, which I paraphrased from.
+}
 
 \hypertarget{implementation}{%
 \subsection{Implementation}\label{implementation}}
@@ -698,11 +722,11 @@ To reflect how initial values vary across trials in the motivating data,
 for each trial \(i\), initial position \(y_i(0)\) is sampled from
 \(N(0, 5)\). The forcing function takes the form
 \(\mathbf{x}_{i1}(\mathbf{t})) = scale_i \times \sin(\pi_i \mathbf{t}) + shift_i)\),
-where \(scale_i\) and \(shift_i\) are randomly-drawn, trial-specific
-scale and shift parameters. Random intercepts \(\delta_i(\mathbf{t}))\)
-are constructed using 10 B-spline basis functions
-\(\mathbf{\Theta}(\mathbf{t}))\) and spline coefficients
-\(\mathbf{d}_i\), are drawn from
+where \(scale_i\) and \(shift_i\) are
+\textcolor{red}{randomly-drawn, trial-specific scale and shift parameters - what are they randomly drawn from? Also, need to give these variables rather than names (i.e. shift = a, scale = b or whatever)}.
+Random intercepts \(\delta_i(\mathbf{t}))\) are constructed using 10
+B-spline basis functions \(\mathbf{\Theta}(\mathbf{t}))\) and spline
+coefficients \(\mathbf{d}_i\), are drawn from
 \(\mathbf{d}_i \sim N(0, \lambda I_{10})\), where \(\lambda = 50\).
 Measurement errors \(\epsilon_i(\mathbf{t}))\) are drawn from
 \(\epsilon_i(\mathbf{t})) \sim N(0, \sigma^2 I_{D})\), where
@@ -720,7 +744,10 @@ these three datasets. The middle panel highlights the buffering effect
 of \(\alpha\). When \(\alpha = 2\) buffering is high, meaning initial
 position has a consistent effect on the overall trajectory over the time
 span of the trial. When \(\alpha = 12\) buffering is low, and the impact
-of initial position and forcing functions becomes instantaneous.
+of initial position and forcing functions becomes instantaneous as
+\(\alpha \to \infty\).
+
+\textcolor{red}{For this figure it would be helpful to highlight one specific reach throughout the top two rows. You want to show more intuitively how forcing functions impact the observed trajectories.}
 
 We evaluate performance of our model as a function of the buffering
 parameter \(\alpha\). For each \(\alpha \in (2, 4, 6, 8, 10, 12)\), we
@@ -784,25 +811,30 @@ estimated measurement errors \(\widehat{\sigma}^2_{flode}\) and
 \emph{flode} outperforms \emph{fhist} in terms of the \(ISE\), which is
 consistent with observations in Figure \ref{fig:sim_results}. At low
 values of \(\alpha\), the difference in performance between the methods
-is smaller, and \(ISE\) variability for \emph{flode} is high when
-\(\alpha = 2\). Measurement error is slightly biased away from the true
-value \(\sigma^2 = 0.1\) for both models, though the bias is larger for
-the \emph{fhist} model across values of \(\alpha\). The \emph{flode}
-model is slightly overfitting the data, while \emph{fhist} underfits the
-data.
+is smaller, and \(\log ISE\) variability for \emph{flode} is high when
+\(\alpha = 2\) \textcolor{red}{why?}. Measurement error is slightly
+biased away from the true value \(\sigma^2 = 0.1\) for both models,
+though the bias is larger for the \emph{fhist} model across values of
+\(\alpha\). The \emph{flode} model is slightly overfitting the data,
+while \emph{fhist} underfits the data.
 
 Figure \ref{fig:sim_alpha} shows estimated values \(\widehat{\alpha}\)
-(top row) and random effects variance \(\widehat{\lambda}\) (bottom row)
-from \emph{flode} across datasets with different true values of
+(top row) and random effects variance \(\widehat{\lambda}_d\) (bottom
+row) from \emph{flode} across datasets with different true values of
 \(\alpha\). Our \emph{flode} implementation recovers close to the true
 value of \(\alpha\), though values are slightly biased towards zero for
 datasets with higher true values of \(\alpha\). Our estimates for
-\(\lambda\) are also slightly biased towards zero, an effect which is
+\(\lambda_d\) are also slightly biased towards zero, an effect which is
 also pronounced for higher true values of \(\alpha\). Though not shown,
 the simulations described above were also performed at the increased
 sample size of \(N = 200\) trials. When sample size increases, the
-variance of \(\alpha\) and \(\lambda\) estimates decreases, the
-algorithm converges in fewer iterations, and \(ISE\) values are lower.
+variance of \(\alpha\) and \(\lambda_d\) estimates decreases, the
+algorithm converges in fewer iterations, and \(ISE\) values are lower
+\{\textcolor{red} Jeff, is this an issue that our estimates are slightly
+biased? I at least need to explain why they are biased at high but not
+low values of alpha. Also, how well does the penalization of the
+B-splines work? What happens if we vary the number of B-splines we allow
+for estimation? Do we get an estimate of \(\lambda_b\)\}.
 
 \begin{figure}
 \includegraphics[width=\reprintcolumnwidth]{figs/fig_sim_results-1} \caption{Top row: Fitted values from *fhist* and *flode*. Second row: Residuals from *fhist* and *flode*.  Third row: Random intercepts from *fhist* and *flode*. Values for *flode* are shown on the data scale so that they are comparable with *fhist*. Bottom row: Estimated surfaces from *fhist* and *flode*. Both models were run on the same dataset with ADD EQUATIONS}\label{fig:sim_results}
@@ -849,30 +881,33 @@ trials, we linearly interpolate the data to an even grid of length
 
 We present a univariate analysis of the trajectories in the \(x\),
 \(y\), and \(z\) directions. For each axis, we set the number of
-B-spline bases to \(K_t = 10\) and fit the \emph{flode} model in
-(\ref{eq:flode_mod}). The parameter \(\alpha\) was initialized by doing
-a grid search over values in \([2, 12]\) to find the value,
-\(\alpha_0\), that minimizes the model when each \(\delta_i(t) = 0\).
-This \(\alpha_0\) was then used as a starting value for the \emph{flode}
-algorithm. The results of this analysis are described and interpreted
-below.
+B-spline bases to \(K_t = 10\)
+(\textcolor{red}{what about penalization? If we penalized do we need to specify this? Can we start with a larger number of B-splines})
+and fit the \emph{flode} model in (\ref{eq:flode_mod}). The parameter
+\(\alpha\) was initialized by performing a grid search over values in
+\([2, 12]\) to find the value, \(\alpha_0\), that minimizes the model
+when each \(\delta_i(t) = 0\). This \(\alpha_0\) was then used as a
+starting value for the \emph{flode} algorithm. The results of this
+analysis are described and interpreted below.
 
 Estimated values of the buffering parameter, are, for each axis,
 \(\widehat{\alpha}_x = 3.01\), \(\widehat{\alpha}_y = 3.50\), and
 \(\widehat{\alpha}_z = 3.01\). These values are close, indicating
-similar amounts of buffering across axes. For Figure \ref{fig:paw_fits},
-the first row shows observed (gray) and fitted (red) values for paw
-position. The second row shows random effects on the derivative scale
-for each trial, \(\delta_i(t)\). The third row shows these random
-effects on the data scale, \(\int_s e^{-\alpha (t-s)}\delta_i(s)ds\).
-The first, second, and third columns show results for the \(x\), \(y\),
-and \(z\) axis, respectively. The dotted line through each plot occurs
-at \(t= 0.05\) seconds, which is the time of paw lift for each trial.
-The fitted values are capturing the data well. The random effects show
-more residual variance right after lift (during the time of the actual
-reach) than in other parts of the trial, suggesting that maybe there is
-something driving the reaching movement that we are not measuring.
-
+similar amounts of buffering across axes
+(\textcolor{red}{say more about buffering since that is the benefit of your model. Why might there be less buffering in the y direction?}).
+For Figure \ref{fig:paw_fits}, the first row shows observed (gray) and
+fitted (red) values for paw position. The second row shows random
+effects on the derivative scale for each trial, \(\delta_i(t)\). The
+third row shows these random effects on the data scale,
+\(\int_s e^{-\alpha (t-s)}\delta_i(s)ds\). The first, second, and third
+columns show results for the \(x\), \(y\), and \(z\) axis, respectively.
+The dotted line through each plot occurs at \(t= 0.05\) seconds, which
+is the time of paw lift for each trial. The fitted values are capturing
+the data well. The random effects show more residual variance right
+after lift (during the time of the actual reach) than in other parts of
+the trial, suggesting that maybe there is something driving the reaching
+movement that we are not measuring
+(\textcolor{red}{why does this suggest that there is something driving the reach that we aren't measuring?}).
 Coefficient functions and coefficient surfaces are shown in Figures
 \ref{fig:paw_betas} and \ref{fig:paw_surfaces}, respectively. For
 surfaces we only show results from the \(x\) axis; results from the
@@ -898,17 +933,18 @@ outputs are functions over time. Our novel method compares favorably
 with historical functional regression in the simulation settings we
 examined, and produces reasonable results for our motivating data. Our
 methods are publicly available in an \texttt{R} package.
+(\textcolor{red}{needs to be cleaned up quite a bit and language is too informal throughout.})
 
-We believe this work is an exciting addition to a nascent field in
-statistics, with many possible future directions. A study on the
-asymptotics of the coefficients estimated in this model so that large
-sample confidence intervals and hypothesis tests can be computed would
-help researchers draw inferences about the relationships between inputs
-and outputs of the dynamical system. Extensions to include more complex
-systems of ordinary differential equations, including higher order and
-non-linear ODEs would increase the flexibility of our modeling framework
-and allow for the study of a larger class of repeated measurements of
-dynamical systems.
+We believe this work is an exciting addition to the burgeoning field of
+dynamic data analysis, with many possible future directions. A study on
+the asymptotics of the coefficients estimated in this model so that
+large sample confidence intervals and hypothesis tests can be computed
+would help researchers draw inferences about the relationships between
+inputs and outputs of the dynamical system. Extensions to include more
+complex systems of ordinary differential equations, including higher
+order and non-linear ODEs would increase the flexibility of our modeling
+framework and allow for the study of a larger class of repeated
+measurements of dynamical systems.
 
 The \emph{flode} model was developed based on our current understanding
 of biological processes, and we're working to expand that framework to
@@ -920,8 +956,16 @@ develop a model that incorporates neural information from multiple
 sources within the brain, with the ultimate goal of recreating reaching
 movements based only on initial position and neural activity patterns.
 
+\hypertarget{acknowledgements}{%
+\section*{Acknowledgements}\label{acknowledgements}}
+\addcontentsline{toc}{section}{Acknowledgements}
+
+This work was supported by awards R01NS097423-01 and R01HL123407 from
+the National Institutes of Health.
+
 \hypertarget{repro-items}{%
-\section{Repro items}\label{repro-items}}
+\section*{Repro items}\label{repro-items}}
+\addcontentsline{toc}{section}{Repro items}
 
 Add reproducibility checklist below
 

@@ -1,0 +1,184 @@
+\begin{thebibliography}{23}
+\def\enquote#1{``#1,''}
+\def\plainquote#1{``#1''}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\dourl}[1]{\href{http://#1}{\nolinkurl{#1}}}
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\noopsort}[1]{}
+\providecommand{\switchargs}[2]{#2#1}
+  \def\eatspace #1{#1}
+
+\bibitem[{Becker \emph{et~al.}(2020)Becker, Calame, Wrobel, and
+  Person}]{becker2020}
+\bibinfo{author}{Becker, M.~I.}, \bibinfo{author}{Calame, D.~J.},
+  \bibinfo{author}{Wrobel, J.},  and \bibinfo{author}{Person, A.~L.}
+  (\textbf{\bibinfo{year}{2020}}). \enquote{\bibinfo{title}{Online control of
+  reach accuracy in mice}} \bibinfo{journal}{Journal of Neurophysiology}
+  \textbf{124}(6), \bibinfo{pages}{1637--1655}.
+
+\bibitem[{Chen \emph{et~al.}(2017)Chen, Shojaie, and Witten}]{chen2017}
+\bibinfo{author}{Chen, S.}, \bibinfo{author}{Shojaie, A.},  and
+  \bibinfo{author}{Witten, D.~M.} (\textbf{\bibinfo{year}{2017}}).
+  \enquote{\bibinfo{title}{Network reconstruction from high-dimensional
+  ordinary differential equations}} \bibinfo{journal}{Journal of the American
+  Statistical Association} \textbf{112}(520), \bibinfo{pages}{1697--1707}.
+
+\bibitem[{Crainiceanu \emph{et~al.}(2015)Crainiceanu, Reiss, Goldsmith, Gellar,
+  J, McLean, Swihart, Xiao, Chen, Greven, Kundu, Wrobel, Huang, Huo, and
+  Scheipl}]{refund}
+\bibinfo{author}{Crainiceanu, C.}, \bibinfo{author}{Reiss, P.},
+  \bibinfo{author}{Goldsmith, J.}, \bibinfo{author}{Gellar, J.},
+  \bibinfo{author}{J, H.}, \bibinfo{author}{McLean, M.~W.},
+  \bibinfo{author}{Swihart, B.}, \bibinfo{author}{Xiao, L.},
+  \bibinfo{author}{Chen, Y.}, \bibinfo{author}{Greven, S.},
+  \bibinfo{author}{Kundu, M.~G.}, \bibinfo{author}{Wrobel, J.},
+  \bibinfo{author}{Huang, L.}, \bibinfo{author}{Huo, L.},  and
+  \bibinfo{author}{Scheipl, F.} (\textbf{\bibinfo{year}{2015}}).
+  \emph{\bibinfo{title}{refund: Regression with Functional Data}},
+  \dourl{http://CRAN.R-project.org/package=refund}, \bibinfo{note}{r package
+  version 0.1-24}.
+
+\bibitem[{Eilers and Marx(1996)}]{eilers1996}
+\bibinfo{author}{Eilers, P. H.~C.},  and \bibinfo{author}{Marx, B.~D.}
+  (\textbf{\bibinfo{year}{1996}}). \enquote{\bibinfo{title}{Flexible smoothing
+  with {B}-splines and penalties}} \bibinfo{journal}{Statistical Science}
+  \textbf{11}, \bibinfo{pages}{89--121}.
+
+\bibitem[{Fan and Zhang(2008)}]{fan2008}
+\bibinfo{author}{Fan, J.},  and \bibinfo{author}{Zhang, W.}
+  (\textbf{\bibinfo{year}{2008}}). \enquote{\bibinfo{title}{Statistical methods
+  with varying coefficient models}} \bibinfo{journal}{Statistics and its
+  Interface} \textbf{1}(1), \bibinfo{pages}{179}.
+
+\bibitem[{Goldsmith and Kitago(2016)}]{goldsmith2016}
+\bibinfo{author}{Goldsmith, J.},  and \bibinfo{author}{Kitago, T.}
+  (\textbf{\bibinfo{year}{2016}}). \enquote{\bibinfo{title}{Assessing
+  systematic effects of stroke on motor control by using hierarchical
+  function-on-scalar regression}} \bibinfo{journal}{Journal of the Royal
+  Statistical Society: Series C (Applied Statistics)} \textbf{65}(2),
+  \bibinfo{pages}{215--236}.
+
+\bibitem[{Goldsmith and Schwartz(2017)}]{goldsmith2017}
+\bibinfo{author}{Goldsmith, J.},  and \bibinfo{author}{Schwartz, J.~E.}
+  (\textbf{\bibinfo{year}{2017}}). \enquote{\bibinfo{title}{Variable selection
+  in the functional linear concurrent model}} \bibinfo{journal}{Statistics in
+  medicine} \textbf{36}(14), \bibinfo{pages}{2237--2250}.
+
+\bibitem[{Guo \emph{et~al.}(2015)Guo, Graves, Guo, Zheng, Lee,
+  Rodriguez-Gonzalez, Li, Macklin, Phillips, Mensh \emph{et~al.}}]{guo2015}
+\bibinfo{author}{Guo, J.-Z.}, \bibinfo{author}{Graves, A.~R.},
+  \bibinfo{author}{Guo, W.~W.}, \bibinfo{author}{Zheng, J.},
+  \bibinfo{author}{Lee, A.}, \bibinfo{author}{Rodriguez-Gonzalez, J.},
+  \bibinfo{author}{Li, N.}, \bibinfo{author}{Macklin, J.~J.},
+  \bibinfo{author}{Phillips, J.~W.}, \bibinfo{author}{Mensh, B.~D.}
+  \emph{et~al.} (\textbf{\bibinfo{year}{2015}}).
+  \enquote{\bibinfo{title}{Cortex commands the performance of skilled
+  movement}} \bibinfo{journal}{Elife} \textbf{4}, \bibinfo{pages}{e10774}.
+
+\bibitem[{Henderson and Michailidis(2014)}]{henderson2014}
+\bibinfo{author}{Henderson, J.},  and \bibinfo{author}{Michailidis, G.}
+  (\textbf{\bibinfo{year}{2014}}). \enquote{\bibinfo{title}{Network
+  reconstruction using nonparametric additive ode models}}
+  \bibinfo{journal}{PloS one} \textbf{9}(4), \bibinfo{pages}{e94003}.
+
+\bibitem[{Laird and Ware(1982)}]{laird1982}
+\bibinfo{author}{Laird, N.~M.},  and \bibinfo{author}{Ware, J.~H.}
+  (\textbf{\bibinfo{year}{1982}}). \enquote{\bibinfo{title}{Random-effects
+  models for longitudinal data}} \bibinfo{journal}{Biometrics}
+  \bibinfo{pages}{963--974}.
+
+\bibitem[{Leroux \emph{et~al.}(2018)Leroux, Xiao, Crainiceanu, and
+  Checkley}]{leroux2018}
+\bibinfo{author}{Leroux, A.}, \bibinfo{author}{Xiao, L.},
+  \bibinfo{author}{Crainiceanu, C.},  and \bibinfo{author}{Checkley, W.}
+  (\textbf{\bibinfo{year}{2018}}). \enquote{\bibinfo{title}{Dynamic prediction
+  in functional concurrent regression with an application to child growth}}
+  \bibinfo{journal}{Statistics in medicine} \textbf{37}(8),
+  \bibinfo{pages}{1376--1388}.
+
+\bibitem[{Lu \emph{et~al.}(2011)Lu, Liang, Li, and Wu}]{lu2011}
+\bibinfo{author}{Lu, T.}, \bibinfo{author}{Liang, H.}, \bibinfo{author}{Li,
+  H.},  and \bibinfo{author}{Wu, H.} (\textbf{\bibinfo{year}{2011}}).
+  \enquote{\bibinfo{title}{High-dimensional odes coupled with mixed-effects
+  modeling techniques for dynamic gene regulatory network identification}}
+  \bibinfo{journal}{Journal of the American Statistical Association}
+  \textbf{106}(496), \bibinfo{pages}{1242--1258}.
+
+\bibitem[{Malfait and Ramsay(2003)}]{malfait2003}
+\bibinfo{author}{Malfait, N.},  and \bibinfo{author}{Ramsay, J.~O.}
+  (\textbf{\bibinfo{year}{2003}}). \enquote{\bibinfo{title}{The historical
+  functional linear model}} \bibinfo{journal}{Canadian Journal of Statistics}
+  \textbf{31}, \bibinfo{pages}{115--128}.
+
+\bibitem[{Ramsay and Hooker(2017)}]{ramsay2017}
+\bibinfo{author}{Ramsay, J.},  and \bibinfo{author}{Hooker, G.}
+  (\textbf{\bibinfo{year}{2017}}). \emph{\bibinfo{title}{Dynamic data
+  analysis}} (\bibinfo{publisher}{Springer}).
+
+\bibitem[{Ramsay \emph{et~al.}(2007)Ramsay, Hooker, Campbell, and
+  Cao}]{ramsay2007}
+\bibinfo{author}{Ramsay, J.~O.}, \bibinfo{author}{Hooker, G.},
+  \bibinfo{author}{Campbell, D.},  and \bibinfo{author}{Cao, J.}
+  (\textbf{\bibinfo{year}{2007}}). \enquote{\bibinfo{title}{Parameter
+  estimation for differential equations: a generalized smoothing approach}}
+  \bibinfo{journal}{Journal of the Royal Statistical Society: Series B
+  (Statistical Methodology)} \textbf{69}(5), \bibinfo{pages}{741--796}.
+
+\bibitem[{Ramsay and Silverman(2005)}]{ramsay2005}
+\bibinfo{author}{Ramsay, J.~O.},  and \bibinfo{author}{Silverman, B.~W.}
+  (\textbf{\bibinfo{year}{2005}}). \emph{\bibinfo{title}{Functional Data
+  Analysis}} (\bibinfo{publisher}{New York: Springer}).
+
+\bibitem[{Rao and Reimherr(2021)}]{rao2021}
+\bibinfo{author}{Rao, A.~R.},  and \bibinfo{author}{Reimherr, M.}
+  (\textbf{\bibinfo{year}{2021}}). \enquote{\bibinfo{title}{Modern non-linear
+  function-on-function regression}} \bibinfo{journal}{arXiv preprint
+  arXiv:2107.14151} .
+
+\bibitem[{Sauerbrei \emph{et~al.}(2018)Sauerbrei, Guo, Mischiati, Guo, Kabra,
+  Verma, Branson, and Hantman}]{sauerbrei2018}
+\bibinfo{author}{Sauerbrei, B.}, \bibinfo{author}{Guo, J.-Z.},
+  \bibinfo{author}{Mischiati, M.}, \bibinfo{author}{Guo, W.},
+  \bibinfo{author}{Kabra, M.}, \bibinfo{author}{Verma, N.},
+  \bibinfo{author}{Branson, K.},  and \bibinfo{author}{Hantman, A.}
+  (\textbf{\bibinfo{year}{2018}}). \enquote{\bibinfo{title}{Motor cortex is an
+  input-driven dynamical system controlling dexterous movement}}
+  \bibinfo{journal}{bioRxiv} \bibinfo{pages}{266320}.
+
+\bibitem[{Scheipl \emph{et~al.}(2016)Scheipl, Gertheiss, Greven
+  \emph{et~al.}}]{scheipl2016}
+\bibinfo{author}{Scheipl, F.}, \bibinfo{author}{Gertheiss, J.},
+  \bibinfo{author}{Greven, S.} \emph{et~al.} (\textbf{\bibinfo{year}{2016}}).
+  \enquote{\bibinfo{title}{Generalized functional additive mixed models}}
+  \bibinfo{journal}{Electronic Journal of Statistics} \textbf{10}(1),
+  \bibinfo{pages}{1455--1492}.
+
+\bibitem[{Scheipl \emph{et~al.}(2015)Scheipl, Staicu, and Greven}]{scheipl2015}
+\bibinfo{author}{Scheipl, F.}, \bibinfo{author}{Staicu, A.-M.},  and
+  \bibinfo{author}{Greven, S.} (\textbf{\bibinfo{year}{2015}}).
+  \enquote{\bibinfo{title}{Functional additive mixed models}}
+  \bibinfo{journal}{Journal of Computational and Graphical Statistics}
+  \textbf{24}(2), \bibinfo{pages}{477--501}.
+
+\bibitem[{Tennenbaum and Pollard(1985)}]{tennenbaum1985}
+\bibinfo{author}{Tennenbaum, M.},  and \bibinfo{author}{Pollard, H.}
+  (\textbf{\bibinfo{year}{1985}}). \plainquote{\bibinfo{title}{Ordinary
+  differential equations: an elementary textbook for students of mathematics,
+  engineering, and the sciences}} .
+
+\bibitem[{Walker(1996)}]{walker1996}
+\bibinfo{author}{Walker, S.} (\textbf{\bibinfo{year}{1996}}).
+  \enquote{\bibinfo{title}{An em algorithm for nonlinear random effects
+  models}} \bibinfo{journal}{Biometrics} \bibinfo{pages}{934--944}.
+
+\bibitem[{Yu \emph{et~al.}(2009)Yu, Cunningham, Santhanam, Ryu, Shenoy, and
+  Sahani}]{yu2009}
+\bibinfo{author}{Yu, B.~M.}, \bibinfo{author}{Cunningham, J.~P.},
+  \bibinfo{author}{Santhanam, G.}, \bibinfo{author}{Ryu, S.~I.},
+  \bibinfo{author}{Shenoy, K.~V.},  and \bibinfo{author}{Sahani, M.}
+  (\textbf{\bibinfo{year}{2009}}). \enquote{\bibinfo{title}{Gaussian-process
+  factor analysis for low-dimensional single-trial analysis of neural
+  population activity}} in \emph{\bibinfo{booktitle}{Advances in neural
+  information processing systems}}, pp. \bibinfo{pages}{1881--1888}.
+
+\end{thebibliography}
