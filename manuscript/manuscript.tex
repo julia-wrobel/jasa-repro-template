@@ -312,7 +312,7 @@ intended to capture changes in position driven by unmeasured influences.
 Many systems of differential equations cannot be solved analytically,
 which makes traditional statistical estimation techniques with the
 observed data \(Y\) as the outcome challenging. The class of ODEs we
-consider has a solution, which we conveniently parameterize in terms of
+consider has a solution, which we conveniently parametrize in terms of
 the initial value. Our solution is given by
 
 \begin{equation}
@@ -873,7 +873,7 @@ second. We restrict our analysis to the period just before lift (when
 the paw leaves a resting location) to just after grasp (when the paw
 grasps a food pellet). Because grasp occurred at different times across
 trials, we linearly interpolate the data to an even grid of length
-\(D = 50\) that is shared across trials.
+\(D = 30\) that is shared across trials.
 
 \begin{figure}
 \includegraphics[width=\reprintcolumnwidth]{../output/fig_data_fits-1} \caption{This figure shows fitted values, estimated random effects, and integrated random effects across axes for the paw data. The vertical dotted line occurs at the time of lift for each trial.}\label{fig:paw_fits}
@@ -889,33 +889,29 @@ trials, we linearly interpolate the data to an even grid of length
 
 We present a univariate analysis of the trajectories in the \(x\),
 \(y\), and \(z\) directions. For each axis, we set the number of
-B-spline bases to \(K_t = 10\)
-(\textcolor{red}{what about penalization? If we penalized do we need to specify this? Can we start with a larger number of B-splines})
-and fit the \emph{flode} model in (\ref{eq:flode_mod}). The parameter
-\(\alpha\) was initialized by performing a grid search over values in
-\([2, 12]\) to find the value, \(\alpha_0\), that minimizes the model
-when each \(\delta_i(t) = 0\). This \(\alpha_0\) was then used as a
-starting value for the \emph{flode} algorithm. The results of this
-analysis are described and interpreted below.
+B-spline bases to \(K_t = 10\) and fit the \emph{flode} model in
+(\ref{eq:flode_mod}). The parameter \(\alpha\) was initialized by
+performing a grid search over values in \([0, 14]\) to find the value,
+\(\alpha_0\), that minimizes the model when each \(\delta_i(t) = 0\).
+This \(\alpha_0\) was then used as a starting value for the \emph{flode}
+algorithm. The results of this analysis are described and interpreted
+below.
 
 Estimated values of the buffering parameter, are, for each axis,
 \(\widehat{\alpha}_x = 3.01\), \(\widehat{\alpha}_y = 3.50\), and
 \(\widehat{\alpha}_z = 3.01\). These values are close, indicating
-similar amounts of buffering across axes
-(\textcolor{red}{say more about buffering since that is the benefit of your model. Why might there be less buffering in the y direction?}).
-For Figure \ref{fig:paw_fits}, the first row shows observed (gray) and
-fitted (red) values for paw position. The second row shows random
-effects on the derivative scale for each trial, \(\delta_i(t)\). The
-third row shows these random effects on the data scale,
-\(\int_s e^{-\alpha (t-s)}\delta_i(s)ds\). The first, second, and third
-columns show results for the \(x\), \(y\), and \(z\) axis, respectively.
-The dotted line through each plot occurs at \(t= 0.05\) seconds, which
-is the time of paw lift for each trial. The fitted values are capturing
-the data well. The random effects show more residual variance right
-after lift (during the time of the actual reach) than in other parts of
-the trial, suggesting that maybe there is something driving the reaching
-movement that we are not measuring
-(\textcolor{red}{why does this suggest that there is something driving the reach that we aren't measuring?}).
+similar amounts of buffering across axes. For Figure \ref{fig:paw_fits},
+the first row shows observed (gray) and fitted (red) values for paw
+position. The second row shows random effects on the derivative scale
+for each trial, \(\delta_i(t)\). The third row shows these random
+effects on the data scale, \(\int_s e^{-\alpha (t-s)}\delta_i(s)ds\).
+The first, second, and third columns show results for the \(x\), \(y\),
+and \(z\) axis, respectively. The dotted line through each plot occurs
+at \(t= 0.05\) seconds, which is the time of paw lift for each trial.
+The fitted values are capturing the data well. The random effects show
+more residual variance right after lift (during the time of the actual
+reach) than in other parts of the trial, suggesting that maybe there is
+something driving the reaching movement that we are not measuring.
 Coefficient functions and coefficient surfaces are shown in Figures
 \ref{fig:paw_betas} and \ref{fig:paw_surfaces}, respectively. For
 surfaces we only show results from the \(x\) axis; results from the
@@ -941,7 +937,6 @@ outputs are functions over time. Our novel method compares favorably
 with historical functional regression in the simulation settings we
 examined, and produces reasonable results for our motivating data. Our
 methods are publicly available in an \texttt{R} package.
-(\textcolor{red}{needs to be cleaned up quite a bit and language is too informal throughout.})
 
 We believe this work is an exciting addition to the burgeoning field of
 dynamic data analysis, with many possible future directions. A study on
