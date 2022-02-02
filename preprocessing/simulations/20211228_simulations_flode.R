@@ -31,10 +31,10 @@ registerDoParallel(n_cores)
 ## define or source functions used in code below
 ###############################################################
 
-source(here::here("source", "simulated_paw.R"))
-source(here::here("source", "estimate_flode.R"))
-source(here::here("source", "utils.R"))
-source(here::here("source", "search_alpha.R"))
+source(here::here("preprocessing", "simulated_paw.R"))
+source(here::here("preprocessing", "estimate_flode.R"))
+source(here::here("preprocessing", "utils.R"))
+source(here::here("preprocessing", "search_alpha.R"))
 
 ###############################################################
 ## set simulation design elements 
@@ -161,7 +161,7 @@ for(scenario in 1:12){
 
 	message(paste0("parameter scenario: ", scenario))
 	
-	filename = paste0("/Users/juliawrobel/Documents/projects/2018/201803_Hantman_Trajectories/results/", "20211230" ,"/", "flode_", scenario, ".RDA")
+	filename = paste0(here::here("output", "simulation_results"), "flode_", scenario, ".RDA")
 	save(results,
 			 file = filename)
 } # end scenario loop 

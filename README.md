@@ -1,79 +1,9 @@
 JASA Sharing Reproducible Materials over Github
 ================
 
-This GitHub repository contains a template structure for author(s) who
-submit to JASA AC&S and Theory & Methods to include materials to
-reproduce any analyses, visualizations, and tables.
+# Directory structure
 
-## Why is template repository this useful?
-
-The purpose of this template repository is to provide a mechanism for
-author(s) to share their materials on Github. This enables the following
-advantages for author(s):
-
-1.  Data analyses (including code, narrative text, output, plots, etc)
-    can be version controlled (or branched) allowing original author(s)
-    to continue to develop the analyses or other data analysts to build
-    off the analyses. Also iterations and changes to the analysis are
-    then available via the check in history.
-2.  The materials to reproduce the analyses could be directly copied to
-    the JASA repository with `git clone` functionality.
-3.  Others?
-
-## How does the process work?
-
-### Step 1
-
-Author(s) create a public GitHub repository by
-
-1.  Forking this template repository
-2.  Using `git clone` and removing the `.git` file
-
-### Step 2
-
-Author(s) directly edit the files in the template repository by adding
-the relevant files to the folders and/or `manuscript.Rmd`.
-
-### Step 3
-
-Author(s) use `git commit` to track changes over time and use `git push`
-to push changes to a repository on the author(s) personal GitHub
-account.
-
-### Step 4
-
-Author(s) submit a link to their GitHub repository as part of the [JASA
-Reproducibility review
-process](https://jasa-acs.github.io/repro-guide/).
-
-### Step 5
-
-JASA Associate Editors of Reproducible will review the materials in the
-personal GitHub repository of the authors and submit a reproducibility
-review as part of the standard JASA review process. Authors have the
-opportunity to respond to the review by making changes and pushing their
-changes to their personal GitHub repository.
-
-**Should reviewers/editors be allow to provide pull requests?**
-
-### Step 6
-
-Once the manuscript is accepted, the materials in the author(s) personal
-GitHub repository will be copied to the [JASA
-repository](https://github.com/jasa-acs).
-
-## Description of template structure using R
-
-Two preferred file structures for submissions are shown below. The goals
-in prescribing this structure are to make it easier for the
-reproducibility reviewer to confirm the materials are sufficient for
-reproducing the results as well as facilitating automated generation of
-the outputs via Docker, Singularity, or Github Actions.
-
-## Reproduciblity materials only
-
-The first is for the case where reproducibility materials are being
-provided and are separate from the manuscript.
+The repo has the following directory structure.
 
     ## 
     ## project directory
@@ -81,7 +11,7 @@ provided and are separate from the manuscript.
     ##   |  o-- object of type(s):file
     ##   |-- README.md
     ##   |  o-- object of type(s):file
-    ##   |-- renv/
+    ##   |-- revn/
     ##   |  o-- object of type(s):dir
     ##   |-- preprocessing/
     ##   |  o-- object of type(s):dir
@@ -92,17 +22,56 @@ provided and are separate from the manuscript.
     ##   o-- output/
     ##      o-- object of type(s):dir
 
-## Reproducible document
+Structure of the subdirectories includes:
 
-The second is for manuscripts written as R Markdown documents.
+-   `preprocessing/`: Source files for executing core modeling code,
+    generating simulated data, and running simulations
+    -   `estimate_flode.R`: Defines function for estimating `flode`
+        model using EM algorithm
+    -   `make_pffr.R`: Defines function for running functional
+        historical regression model and processing surfaces for
+        visualization
+    -   `search_alpha.R`: Defines function to perform grid search over
+        possible *α*<sub>0</sub> values to choose best initial value.
+    -   `simulated_paw.R`: Defines function for simulating data.
+    -   `utils.R`: Defines helper functions called in the
+        `estimate_flode.R` file.
+    -   `simulations/`: File for generating simulation results across
+        all simulation scenarios.
+        -   `20211227_simulations_flodeVSfhist.R`: Compares flode and
+            functional historical regression across 9 alpha values for
+            30 datasets each.
+        -   `20211228_simulations_flode.R`: Evaluates flode across 4
+            sample sizes and 3 alpha values for 30 datasets each.
+-   `analysis/`
+    -   `202112_dataAnalysis.Rmd/.html`: Code/output for processing paw
+        trajectory data and generating Figures 1, 6, and 7 in the
+        manuscript
 
-    ## 
-    ## project directory
-    ##   |-- manuscript.rmd
-    ##   |  o-- object of type(s):file
-    ##   |-- renv/
-    ##   |  o-- object of type(s):dir
-    ##   |-- preprocessing/
-    ##   |  o-- object of type(s):dir
-    ##   o-- data/
-    ##      o-- object of type(s):dir
+## Notes about this repo/workflow
+
+Describe file structure and workflow here
+
+-   Slow steps are cached or saved as R data objects that are read in
+    the next time a file is run- this makes it faster to run the
+    Rmarkdown files that generate analysis results
+-   The file `202112_simulation_results.Rmd` creates and saves Figures
+    2, 3, 4 and 5 and stores them as `.png` files in the `output` folder
+-   The file `202112_dataAnalysis.Rmd` creates and saves Figures 1, 6,
+    and 7 and stores them in the `output` folder. Also creates and saves
+    to `output` a dataframe of computation times and parameter values
+    that are reported as part of inline text in the `manuscript.Rmd`.
+    This allows all inline `R` code from the `manuscript.Rmd` to be
+    fully reproducible (not entered by hand).
+-   To generate the manuscript knit the file `manuscript.Rmd` in the
+    `manuscript` folder. This does not execute the full analysis but
+    reads in figures and numbers in the `output` folder generated by
+    knitting `202112_simulation_results.Rmd` and
+    `202112_dataAnalysis.Rmd`.
+
+# Thoughts
+
+-   easily could have this same format whether manuscripts are generated
+    using R Markdown or Latex
+-   probably best to have users clone the repo rather than fork it so
+    they can rename it?

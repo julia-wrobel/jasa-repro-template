@@ -26,7 +26,6 @@ dir_type <- function() {
 }
 
 `project directory` <- list(
-  ".here" = file_type(),
   "README.md" = file_type(),
   "revn/" = dir_type(),
   "preprocessing/" = dir_type(),
@@ -39,15 +38,20 @@ ld_cc_dendro(`project directory`)
 
 Structure of the subdirectories includes:
 
-* `preprocessing/`: sources files for executing core modeling code and generating simulated data
-  * `estimate_flode.R`: Code for estimating `flode` model using EM algorithm
-  * `make_pffr.R`
-  * `search_alpha.R`
-  * `simulated_paw.R`
-  * `utils.R`
-  * `simulations/`
-    * 
+* `preprocessing/`: Source files for executing core modeling code, generating simulated data, and running simulations
+  * `estimate_flode.R`: Defines function for estimating `flode` model using EM algorithm
+  * `make_pffr.R`: Defines function for running functional historical regression model and processing surfaces for visualization
+  * `search_alpha.R`: Defines function to perform grid search over possible $\alpha_0$ values to choose best initial value. 
+  * `simulated_paw.R`: Defines function for simulating data.
+  * `utils.R`: Defines helper functions called in the `estimate_flode.R` file.
+  * `simulations/`: File for generating simulation results across all simulation scenarios.
+    * `20211227_simulations_flodeVSfhist.R`: Compares flode and functional historical regression across 9 alpha values for 30 datasets each.
+    * `20211228_simulations_flode.R`: Evaluates flode across 4 sample sizes and 3 alpha values for 30 datasets each.
 * `analysis/`
+  * `202112_dataAnalysis.Rmd/.html`: Code/output for processing raw paw trajectory data and generating Figures 1, 6, and 7 in the manuscript.
+  * `202112_simulation_results.Rmd/.html`: Code/output for processing simulation results and generating Figures 2, 3, 4, and 5 in the manuscript.
+  * `202112_simulation_results_cache`:
+
 
 
 

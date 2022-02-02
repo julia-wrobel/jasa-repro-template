@@ -32,11 +32,11 @@ registerDoParallel(n_cores)
 ###############################################################
 
 
-source(here::here("source", "make_pffr.R"))
-source(here::here("source", "simulated_paw.R"))
-source(here::here("source", "estimate_flode.R"))
-source(here::here("source", "utils.R"))
-source(here::here("source", "search_alpha.R"))
+source(here::here("preprocessing", "make_pffr.R"))
+source(here::here("preprocessing", "simulated_paw.R"))
+source(here::here("preprocessing", "estimate_flode.R"))
+source(here::here("preprocessing", "utils.R"))
+source(here::here("preprocessing", "search_alpha.R"))
 
 ###############################################################
 ## set simulation design elements 
@@ -193,7 +193,7 @@ for(scenario in 7:9){
 		results_mat
 	} # end N_iter foreach loop
 
-	filename = paste0("/Users/juliawrobel/Documents/projects/2018/201803_Hantman_Trajectories/results/", "20211230" ,"/", "flodeVSfhist_", scenario, ".RDA")
+	filename = paste0(here::here("output", "simulation_results"), "flodeVSfhist_", scenario, ".RDA")
 	save(results,
 			 file = filename)
 } # end scenario loop 
