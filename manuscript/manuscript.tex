@@ -75,7 +75,23 @@ Colorado Anschutz Medical Campus}
 \email{julia.wrobel@cuanschutz.edu}
 %% for additional information
 
+\author{Britton Sauerbrei}
+% ie
+%\affiliation{Department1,  University1, City, State ZipCode, Country}
+\affiliation{Janelia Research Campus, Howard Hughes Medical Institute}
+%% for corresponding author
+
+%% for additional information
+
 \author{Jian-Zhong Guo}
+% ie
+%\affiliation{Department1,  University1, City, State ZipCode, Country}
+\affiliation{Janelia Research Campus, Howard Hughes Medical Institute}
+%% for corresponding author
+
+%% for additional information
+
+\author{Adam Hantman}
 % ie
 %\affiliation{Department1,  University1, City, State ZipCode, Country}
 \affiliation{Janelia Research Campus, Howard Hughes Medical Institute}
@@ -208,7 +224,7 @@ trial, and data is linearly shifted so that the timing of lift for each
 trial is aligned.
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_eda-1} \caption{Top row: Paw trajectories along $x$, $y$, and $z$ axes for 147 trials. Middle row: neural spike times for 3 of the 25 neurons. Each row is a trial and each column is a point in time, and dark or light shading indicates that a neuron is off or on, respectively, at that point in time. After auditory cue, neurons show light activation at location 2, high activation at location 6, and dampening in activation at location 9. Bottom row: The five factors from Gaussian process factor analysis, shown for all 147 trials.}\label{fig:flode_data}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_data_eda-1} \caption{Top row: Paw trajectories along $x$, $y$, and $z$ axes for 147 trials. Middle row: neural spike times for 3 of the 25 neurons. Each row is a trial and each column is a point in time, and dark or light shading indicates that a neuron is off or on, respectively, at that point in time. After auditory cue, neurons show light activation at location 2, high activation at location 6, and dampening in activation at location 9. Bottom row: The five factors from Gaussian process factor analysis, shown for all 147 trials.}\label{fig:flode_data}
 \end{figure}
 
 The top row of Figure (\ref{fig:flode_data}) shows the paw positions
@@ -241,10 +257,8 @@ Previous work used initial position and neural activity data to predict
 paw trajectories for held-out trials. However, this work did not allow
 for the relationship between position and neural activity to vary over
 time, and did not enhance interpretation of this system of inputs and
-outputs
-(\textcolor{red}{clarify what you mean here. Be more explicit about what new questions you are answering}).
-We describe our model below; this work introduces a novel regression
-method that is well-suited to our scientific context.
+outputs. We describe our model below; this work introduces a novel
+regression method that is well-suited to our scientific context.
 
 \hypertarget{flode-model}{%
 \subsection{flode model}\label{flode-model}}
@@ -440,8 +454,7 @@ literature. Explicitly incorporating initial position into a functional
 regression context is both critical for our dynamical systems approach
 and a novel contribution in its own right. Finally, the \emph{flode}
 model is nonlinear in its parameter \(\alpha\), a development which
-other functional regression methods haven't directly
-addressed.\textcolor{red}{Jeff, are these arguments convincing enough?}
+other functional regression methods haven't directly addressed.
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
@@ -708,7 +721,7 @@ the true value of the \(\alpha\) parameter to obtain simulation settings
 that evaluate the sensitivity of our method as \(\alpha\) changes.
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_simdata_RE-1} \caption{This figure shows simulated data when alpha = 2, alpha = 6, and alpha = 12. Top row: Left column shows forcing functions, right column shows shows random effects on the paw velocity scale. Middle row: Observed paw positions for three different values of alpha. When alpha is small initial position has a larger effect on the overall trajectory.  Bottom row: Coefficient surfaces for three different values of alpha.  ADD EQUATIONS TO CAPTION.}\label{fig:sim_data}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_simdata_RE-1} \caption{This figure shows simulated data when alpha = 2, alpha = 6, and alpha = 12. Top row: Left column shows forcing functions, right column shows shows random effects on the paw velocity scale. Middle row: Observed paw positions for three different values of alpha. When alpha is small initial position has a larger effect on the overall trajectory.  Bottom row: Coefficient surfaces for three different values of alpha.  ADD EQUATIONS TO CAPTION.}\label{fig:sim_data}
 \end{figure}
 
 \hypertarget{simulation-design}{%
@@ -829,23 +842,18 @@ also pronounced for higher true values of \(\alpha\). Though not shown,
 the simulations described above were also performed at the increased
 sample size of \(N = 200\) trials. When sample size increases, the
 variance of \(\alpha\) and \(\lambda_d\) estimates decreases, the
-algorithm converges in fewer iterations, and \(ISE\) values are lower
-\{\textcolor{red} Jeff, is this an issue that our estimates are slightly
-biased? I at least need to explain why they are biased at high but not
-low values of alpha. Also, how well does the penalization of the
-B-splines work? What happens if we vary the number of B-splines we allow
-for estimation? Do we get an estimate of \(\lambda_b\)\}.
+algorithm converges in fewer iterations, and \(ISE\) values are lower.
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_sim_results-1} \caption{Top row: Fitted values from *fhist* and *flode*. Second row: Residuals from *fhist* and *flode*.  Third row: Random intercepts from *fhist* and *flode*. Values for *flode* are shown on the data scale so that they are comparable with *fhist*. Bottom row: Estimated surfaces from *fhist* and *flode*. Both models were run on the same dataset with ADD EQUATIONS}\label{fig:sim_results}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_sim_results-1} \caption{Top row: Fitted values from *fhist* and *flode*. Second row: Residuals from *fhist* and *flode*.  Third row: Random intercepts from *fhist* and *flode*. Values for *flode* are shown on the data scale so that they are comparable with *fhist*. Bottom row: Estimated surfaces from *fhist* and *flode*. Both models were run on the same dataset with ADD EQUATIONS}\label{fig:sim_results}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_sim_surfaceErr-1} \caption{Log surface errors}\label{fig:sim_surfaceErr}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_sim_surfaceErr-1} \caption{Log surface errors}\label{fig:sim_surfaceErr}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_sim_alpha-1} \caption{alpha simulations}\label{fig:sim_alpha}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_sim_alpha-1} \caption{alpha simulations}\label{fig:sim_alpha}
 \end{figure}
 
 \hypertarget{data-analysis}{%
@@ -868,15 +876,15 @@ trials, we linearly interpolate the data to an even grid of length
 \(D = 50\) that is shared across trials.
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_fits-1} \caption{This figure shows fitted values, estimated random effects, and integrated random effects across axes for the paw data. The vertical dotted line occurs at the time of lift for each trial.}\label{fig:paw_fits}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_data_fits-1} \caption{This figure shows fitted values, estimated random effects, and integrated random effects across axes for the paw data. The vertical dotted line occurs at the time of lift for each trial.}\label{fig:paw_fits}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_beta-1} \caption{This figure shows fitted intercept and coefficient functions across axes for the paw data. The vertical dotted black line occurs at the point of lift.}\label{fig:paw_betas}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_data_beta-1} \caption{This figure shows fitted intercept and coefficient functions across axes for the paw data. The vertical dotted black line occurs at the point of lift.}\label{fig:paw_betas}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\reprintcolumnwidth]{figs/fig_data_surfaces-1} \caption{This figure shows estimated surfaces}\label{fig:paw_surfaces}
+\includegraphics[width=\reprintcolumnwidth]{../output/fig_data_surfaces-1} \caption{This figure shows estimated surfaces}\label{fig:paw_surfaces}
 \end{figure}
 
 We present a univariate analysis of the trajectories in the \(x\),

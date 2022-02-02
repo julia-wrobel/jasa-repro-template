@@ -6,7 +6,11 @@ author:
 - name: Julia Wrobel
   affiliation: Department of Biostatistics and Informatics, University of Colorado Anschutz Medical Campus
   email: julia.wrobel\@cuanschutz.edu
+- name: Britton Sauerbrei
+  affiliation: Janelia Research Campus, Howard Hughes Medical Institute
 - name: Jian-Zhong Guo
+  affiliation: Janelia Research Campus, Howard Hughes Medical Institute
+- name: Adam Hantman  
   affiliation: Janelia Research Campus, Howard Hughes Medical Institute
 - name: Jeff Goldsmith
   affiliation: Department of Biostatistics, Mailman School of Public Health, Columbia University
@@ -81,11 +85,9 @@ In the experimental framework that generated our motivating data, a single mouse
 For each trial $i$, paw position was recorded in the $x$, $y$, and $z$ directions over 4 seconds, resulting in trivariate functional observations $\{ Y_i^{P_x}(t), Y_i^{P_y}(t), Y_i^{P_z}(t)\}$. Because we treat each direction independently, going forward we simplify notation to $Y_i(t)$ by omitting the superscripts $P_x$, $P_y$, and $P_z$. The auditory cue was played 0.5 seconds into the trial, on average lift occurred at 0.77 seconds, and on average grasp occurred at 0.88 seconds into the trial. For our analysis we limit the time frame to the period 0.05 seconds before lift to 0.25 seconds after lift for each trial, and data is linearly shifted so that the timing of lift for each trial is aligned. 
 
 
-<!-- %i don't know that you have you introduce the superscripts at all -- you could probably eliminate that, say we model each direction separately (maybe with a sensitivity analysis somewhere), and will use Y as our response, and make clear from context which direction we're showing results for.  -->
-
 
 ```{r flode_data, echo=FALSE, fig.width=12, fig.cap="Top row: Paw trajectories along $x$, $y$, and $z$ axes for 147 trials. Middle row: neural spike times for 3 of the 25 neurons. Each row is a trial and each column is a point in time, and dark or light shading indicates that a neuron is off or on, respectively, at that point in time. After auditory cue, neurons show light activation at location 2, high activation at location 6, and dampening in activation at location 9. Bottom row: The five factors from Gaussian process factor analysis, shown for all 147 trials."}
-knitr::include_graphics("figs/fig_data_eda-1.png")
+knitr::include_graphics("../output/fig_data_eda-1.png")
 ```
 
 
@@ -93,17 +95,10 @@ The top row of Figure (\ref{fig:flode_data}) shows the paw positions across tria
 
 Firing rates of the 25 neurons were reduced to five dimensions using Gaussian process factor analysis (GPFA), a standard technique for decomposing noisy neural spiking activity into smooth low-dimension neural trajectories \citep{yu2009}. From a neurobiological perspective, extracting emergent patterns in the motor cortex using GPFA is a better way of assessing how neural activity drives behavior than using the raw neural spike times because it increases generalizability across neurons and trials. From a statistical perspective, GPFA also reduces risk of collinearity when using the neural spike times as covariates in a regression setting. 
 
-Previous work used initial position and neural activity data to predict paw trajectories for held-out trials. However, this work did not allow for the relationship between position and neural activity to vary over time, and did not enhance interpretation of this system of inputs and outputs (\textcolor{red}{clarify what you mean here. Be more explicit about what new questions you are answering}). We describe our model below; this work introduces a novel regression method that is well-suited to our scientific context.
-
-<!-- %{\color{red} its not clear what question their results left unanswered but that you're going to answer with new fancy methods. Also, we should talk about what you're trying to convey here (first sentence of previous paragraph)} -->
-
+Previous work used initial position and neural activity data to predict paw trajectories for held-out trials. However, this work did not allow for the relationship between position and neural activity to vary over time, and did not enhance interpretation of this system of inputs and outputs. We describe our model below; this work introduces a novel regression method that is well-suited to our scientific context.
 
 ## flode model
 \label{sec:flode}
-
-
-<!-- %{\color{red}i think you could turn this sentence into a three-or four-sentence paragraph describing (your current understanding) of the biological model, and how each component is related. your goals are for a reader to understand something about the biology, but also to be completely convinced that an ODE "works" before you've introduced that model. how does some statement about the motor cortex having some input on paw position. give some motivation of the model you have written down.. basically lead them into the way the model is setup. I don't really know how to deal with this comment..} -->
-
 
 The biological underpinnings of our data are a dynamical system where initial position and paw are being acted on by outside forces coming from the motor cortex; these forces drive changes in velocity of the paw which then influences position. We introduce the *flode* (**f**unctional **l**inear **o**rdinary **d**ifferential **e**quation) model, a novel functional regression framework that represents this neurobiological system of inputs (motor cortical activity) and outputs (paw position). The *flode* model is a first-order ordinary differential equation (ODE), which allows us to incorporate how change in paw position influences position at time $t$, reflecting the dynamic nature of our data. In its differential form, our model is
 
@@ -117,9 +112,7 @@ where  $y_i(t)$ and $y'_i(t)$ are the paw position and first derivative of paw p
 
 This is a buffered system, meaning the response time is longer than the time interval in which the input changes. The scalar parameter $\alpha$, called the buffering parameter, indicates the amount of buffering on the system. As $\alpha \to 0$, buffering increases, and the effects of forcing functions and initial position persist in time. As $\alpha$ grows larger, the effects of forcing functions and initial position becomes instantaneous. The $\mathcal{B}_p(t)$ are coefficient functions that measure the impact of changes in the forcing function $x_{ip}(t)$ on the system, interpreted as the change in paw velocity at time $t$, $y'_i(t)$, given a one unit change in forcing function $x_{ip}(t)$. $\mathcal{B}_0(t)$ and $\delta_i(t)$ are the population-level and trial-specific intercepts, respectively. The $\delta_i(t)$ terms capture residual within-trial correlation. While much of fine motor control is known to be driven by the motor cortex, other brain regions such as the cerebellum also contribute to the paw reaching motion \citep{becker2020}, and the $\delta_i(t)$ term is intended to capture changes in position driven by unmeasured influences. 
 
-<!-- %The population intercept $\mathcal{B}_0(t)$ the average paw velocity at time $t$ when brain activity is zero.. probably doesn't make sense to interpret this. -->
-
-Many systems of differential equations cannot be solved analytically, which makes traditional statistical estimation techniques with the observed data $Y$ as the outcome challenging. The class of ODEs we consider has a solution, which we conveniently parameterize in terms of the initial value. Our solution is given by
+Many systems of differential equations cannot be solved analytically, which makes traditional statistical estimation techniques with the observed data $Y$ as the outcome challenging. The class of ODEs we consider has a solution, which we conveniently parametrize in terms of the initial value. Our solution is given by
 	
 \begin{equation}
 \label{eq:flode_mod}	
@@ -136,17 +129,10 @@ The *flode* model is a first-order linear differential equation, which reflects 
 
 Systems of ordinary differential equations (ODEs) can be used to directly model the relationship between an outcome and its derivatives, leading to widespread popularity for modeling dynamical systems in physics, biology, neuroscience, and other disciplines. First-order ODEs, which incorporate only the first derivative of $y$, follow the form given in Equation (\ref{eq:flode_deriv}), though the $\delta_i(t)$ term we include is unconventional. Equation (\ref{eq:flode_deriv}) is also said to be a linear differential equation because its right hand side can be written as a linear combination of $y$ and terms that do not contain $y$  \citep{tennenbaum1985}. When analytically solvable, most ODEs do not have a unique solution. It is therefore common, and useful for our data setting, to solve in terms of the initial value $y(0)$.
 
-<!-- %I don't think i understand this sentence (last one of preceding paragraph) -- you've got a few ideas that should be separated. (i) you can't always get an analytic solution to more complex ODEs; (ii) even when you can, the solution isn't always unique. i think the thing about solving in terms of the initial value has to do with uniqueness but it's not clear how.  -->
-<!-- %%%%   -->
-
 Most applications of ODEs in science and engineering focus on restrictive rather than general settings, in part because parameter estimation for general models is challenging. In the past this specificity has limited their use in statistics, but they are growing in popularity. \cite{chen2017} reconstructs gene regulatory networks by estimating sparse nonlinear ODEs for noisy gene expression data, building on previous work \citep{lu2011, henderson2014}.  
-
-<!-- %{\color{red} jeff comment: I ... only sort of get what you're trying to do with this paragraph -- seems like you want to say most applications of ODEs has focused on very restrictive settings rather than general models because the general models are hard, but that's beginning to change? definitely still a bit awkward; i think you could address this in part by giving some examples of use in engineering, and also saying how solutions are found (numerically??). and then say that parameter estimation using more statistically-informed approaches is hard, but statisticians are starting to pay attention} {\color{blue} I changed most of this paragraph but I feel like it's still a little awkward. But yeah, that's exactly what I was trying to say.} -->
 
 
 In their book Dynamic Data Analysis, \cite{ramsay2017} conceptualize dynamical systems as data-driven statistical models. The book provides a framework for estimating a large class of differential equations, as well as an excellent overview of ODE-based models that expands on earlier work from \cite{ramsay2007} for parameter estimation in nonlinear ODEs. Separate estimation frameworks are provided for linear and nonlinear ODEs though both involve a tradeoff between the best fit to a particular prespecified ODE and a smooth fit to the data, enforced using B-spline expansions. While this general framework is well-suited to estimate parameters for a single realization of an ODE, it does not accommodate multiple trials or the complexities that arise in such cases.
-
-<!-- %{\color{red} this might be a good place to talk more about how flode differs from this literature -- multiple trials, including a delta, something about the estimation method (if that's different)} -->
 
 ## Functional regression models
 \label{sec:fda}
@@ -166,7 +152,7 @@ Here $\beta_0(t)$ is the population-level intercept, and each $\beta_p(t,s)$ is 
 Conceptually both the integrated *flode* model in \ref{eq:flode_mod} and historical functional regression use predictors, including their recent history, to understand current values of the response function. Because of these high-level similarities we find it useful to compare and contrast these methods. If we assume the surface $\beta(t,s)$ from Equation (\ref{eq:fhist_mod}) takes the form  $e^{-\alpha (t-s)} \mathcal{B}(s)$ from Equation (\ref{eq:flode_mod}), $\gamma_i(t) = y_i(0)e^{-\alpha t} + \int_0^t e^{-\alpha (t-s)}\delta_i(s)ds$, and $\beta_0(t) = \int_0^t e^{-\alpha (t-s)}\mathcal{B}_0(s)ds$, then *flode* can be considered a special case of the historical functional regression model. However, the *flode* surface $e^{-\alpha (t-s)} \mathcal{B}(s)$ is very restricted compared to the more general historical surface $\beta(s,t)$; as a result, the historical model is likely too flexible and may overfit data that is generated by the *flode* model.
 
 
-These assumptions are not trivial. From a conceptual standpoint, *flode* introduces a new framework for thinking about the relationship between inputs and outputs in an ODE system, and the historical model does not offer this interpretation. Initial position is a crucial element of the *flode* framework because it provides a specific analytic solutions to the ODE in \ref{eq:flode_deriv}; in contrast initial position is not a natural element of  the historical model and does not have precedent in the functional regression literature. Explicitly incorporating initial position into a functional regression context is both critical for our dynamical systems approach and a novel contribution in its own right. Finally, the *flode* model is nonlinear in its parameter $\alpha$, a development which other functional regression methods haven't directly addressed.\textcolor{red}{Jeff, are these arguments convincing enough?}
+These assumptions are not trivial. From a conceptual standpoint, *flode* introduces a new framework for thinking about the relationship between inputs and outputs in an ODE system, and the historical model does not offer this interpretation. Initial position is a crucial element of the *flode* framework because it provides a specific analytic solutions to the ODE in \ref{eq:flode_deriv}; in contrast initial position is not a natural element of  the historical model and does not have precedent in the functional regression literature. Explicitly incorporating initial position into a functional regression context is both critical for our dynamical systems approach and a novel contribution in its own right. Finally, the *flode* model is nonlinear in its parameter $\alpha$, a development which other functional regression methods haven't directly addressed.
 
 # Methods
 \label{sec:methods}
@@ -188,11 +174,6 @@ To induce smoothness and reduce dimensionality, the trial-specific random interc
 &=& \sum_px_{ip}^*(t, \alpha)\mathbf{b}_p\\
 &=& \mathbf{x}_i^*(t, \alpha)\mathbf{b},
 \end{eqnarray*}
-
-
-<!-- %{\color{red} there's some non-standard stuff going on in here, from the perspective of usual FDA, so you might slow it down and comment some more. like you're constructing a design vector / matrix for the spline coefficients via integration, and the result is a non-linear function of another model parameter. thats ... not something that usually comes up in FDA. and that's great -- it means you're doing something new and unique! don't miss the chance to remind readers of that, or to let their expectations get in the way of your paper (meaning a reviewer might be skimming here looking for new stuff and just ... not realize how different this is)} -->
-<!-- % deal with this after you graduate -->
-<!-- %%% -->
 
 \noindent
 where $\otimes$ denotes the element-wise Kronecker product, and $1_{K_t}$ is a length $K_t$ column vector with each entry equal to 1. We define a $D \times \{K_t \times (P + 1)\}$ matrix $\mathbf{x}_i^*(t, \alpha) = \left\{x_{i0}^*(t, \alpha) | \ldots | x_{iP}^*(t, \alpha) \right\}$ and a $\{K_t \times (P + 1)\} \times 1$ vector $\mathbf{b} = \left(\mathbf{b}_0^T | \ldots | \mathbf{b}_P^T \right)^T.$ Similarly, the random intercept term becomes 
@@ -307,7 +288,7 @@ We assess the performance of our method using simulations designed to mimic the 
 
 ```{r sim_data, echo=FALSE, fig.cap="This figure shows simulated data when alpha = 2, alpha = 6, and alpha = 12. Top row: Left column shows forcing functions, right column shows shows random effects on the paw velocity scale. Middle row: Observed paw positions for three different values of alpha. When alpha is small initial position has a larger effect on the overall trajectory.  Bottom row: Coefficient surfaces for three different values of alpha.  ADD EQUATIONS TO CAPTION."}
 
-knitr::include_graphics("figs/fig_simdata_RE-1.png")
+knitr::include_graphics("../output/fig_simdata_RE-1.png")
 
 ```
 
@@ -333,57 +314,57 @@ Figure \ref{fig:sim_results} shows results from a single simulated dataset with 
 
 Figure \ref{fig:sim_surfaceErr} summarizes results for *flode* and *fhist* across datasets generated using different values of $\alpha$. The left panel shows $\log ISE$, and the right panel shows estimated measurement errors $\widehat{\sigma}^2_{flode}$ and $\widehat{\sigma}^2_{fhist}$. Across values of $\alpha$, *flode* outperforms *fhist* in terms of the $ISE$, which is consistent with observations in Figure \ref{fig:sim_results}. At low values of $\alpha$, the difference in performance between the methods is smaller, and $\log ISE$ variability for *flode* is high when $\alpha = 2$ \textcolor{red}{why?}. Measurement error is slightly biased away from the true value $\sigma^2 = 0.1$ for both models, though the bias is larger for the *fhist* model across values of $\alpha$. The *flode* model is slightly overfitting the data, while *fhist* underfits the data. 
 
-Figure \ref{fig:sim_alpha} shows estimated values $\widehat{\alpha}$ (top row) and random effects variance $\widehat{\lambda}_d$ (bottom row) from *flode* across datasets with different true values of $\alpha$. Our *flode* implementation recovers close to the true value of $\alpha$, though values are slightly biased towards zero for datasets with higher true values of $\alpha$. Our estimates for $\lambda_d$ are also slightly biased towards zero, an effect which is also pronounced for higher true values of $\alpha$. Though not shown, the simulations described above were also performed at the increased sample size of $N = 200$ trials. When sample size increases, the variance of $\alpha$ and $\lambda_d$ estimates decreases, the algorithm converges in fewer iterations, and $ISE$ values are lower {\textcolor{red} Jeff, is this an issue that our estimates are slightly biased? I at least need to explain why they are biased at high but not low values of alpha. Also, how well does the penalization of the B-splines work? What happens if we vary the number of B-splines we allow for estimation? Do we get an estimate of $\lambda_b$}.
+Figure \ref{fig:sim_alpha} shows estimated values $\widehat{\alpha}$ (top row) and random effects variance $\widehat{\lambda}_d$ (bottom row) from *flode* across datasets with different true values of $\alpha$. Our *flode* implementation recovers close to the true value of $\alpha$, though values are slightly biased towards zero for datasets with higher true values of $\alpha$. Our estimates for $\lambda_d$ are also slightly biased towards zero, an effect which is also pronounced for higher true values of $\alpha$. Though not shown, the simulations described above were also performed at the increased sample size of $N = 200$ trials. When sample size increases, the variance of $\alpha$ and $\lambda_d$ estimates decreases, the algorithm converges in fewer iterations, and $ISE$ values are lower.
 
 
 ```{r sim_results, echo=FALSE, fig.cap="Top row: Fitted values from *fhist* and *flode*. Second row: Residuals from *fhist* and *flode*.  Third row: Random intercepts from *fhist* and *flode*. Values for *flode* are shown on the data scale so that they are comparable with *fhist*. Bottom row: Estimated surfaces from *fhist* and *flode*. Both models were run on the same dataset with ADD EQUATIONS"}
 
-knitr::include_graphics("figs/fig_sim_results-1.png")
+knitr::include_graphics("../output/fig_sim_results-1.png")
 
 ```
 
 
 ```{r sim_surfaceErr, echo=FALSE, fig.cap="Log surface errors"}
 
-knitr::include_graphics("figs/fig_sim_surfaceErr-1.png")
+knitr::include_graphics("../output/fig_sim_surfaceErr-1.png")
 
 ```
 
 ```{r sim_alpha, echo=FALSE, fig.cap="alpha simulations"}
 
-knitr::include_graphics("figs/fig_sim_alpha-1.png")
+knitr::include_graphics("../output/fig_sim_alpha-1.png")
 
 ```
 
 # Data Analysis
 \label{sec:results}
 
-In this section, we apply the methods described in Section \ref{sec:methods} to the mouse paw trajectory data introduced in Section \ref{sec:data}. Our dataset consists of 147 paw trajectory trials from a single mouse, where each trajectory was collected under the same experimental conditions. Accompanying paw trajectories are measurements of brain activity in the motor cortex, as summarized by GPFA \citep{yu2009}, for a total of 5 forcing functions. Position and neural activity were recorded concurrently at a rate of 500 measurements per second.  We restrict our analysis to the period just before lift (when the paw leaves a resting location) to just after grasp (when the paw grasps a food pellet). Because grasp occurred at different times across trials, we linearly interpolate the data to an even grid of length $D = 50$ that is shared across trials.
+In this section, we apply the methods described in Section \ref{sec:methods} to the mouse paw trajectory data introduced in Section \ref{sec:data}. Our dataset consists of 147 paw trajectory trials from a single mouse, where each trajectory was collected under the same experimental conditions. Accompanying paw trajectories are measurements of brain activity in the motor cortex, as summarized by GPFA \citep{yu2009}, for a total of 5 forcing functions. Position and neural activity were recorded concurrently at a rate of 500 measurements per second.  We restrict our analysis to the period just before lift (when the paw leaves a resting location) to just after grasp (when the paw grasps a food pellet). Because grasp occurred at different times across trials, we linearly interpolate the data to an even grid of length $D = 30$ that is shared across trials.
 
 ```{r paw_fits, echo=FALSE, fig.cap="This figure shows fitted values, estimated random effects, and integrated random effects across axes for the paw data. The vertical dotted line occurs at the time of lift for each trial."}
 
-knitr::include_graphics("figs/fig_data_fits-1.png")
+knitr::include_graphics("../output/fig_data_fits-1.png")
 ```
 
 ```{r paw_betas, echo=FALSE, fig.cap="This figure shows fitted intercept and coefficient functions across axes for the paw data. The vertical dotted black line occurs at the point of lift."}
 
-knitr::include_graphics("figs/fig_data_beta-1.png")
+knitr::include_graphics("../output/fig_data_beta-1.png")
 ```
 
 
 ```{r paw_surfaces, echo=FALSE, fig.cap="This figure shows estimated surfaces"}
 
-knitr::include_graphics("figs/fig_data_surfaces-1.png")
+knitr::include_graphics("../output/fig_data_surfaces-1.png")
 ```
 
-We present a univariate analysis of the trajectories in the $x$, $y$, and $z$ directions. For each axis, we set the number of B-spline bases to $K_t = 10$ (\textcolor{red}{what about penalization? If we penalized do we need to specify this? Can we start with a larger number of B-splines}) and fit the *flode* model in (\ref{eq:flode_mod}). The parameter $\alpha$ was initialized by performing a grid search over values in $[2, 12]$ to find the value, $\alpha_0$, that minimizes the model when each $\delta_i(t) = 0$. This $\alpha_0$ was then used as a starting value for the *flode* algorithm. The results of this analysis are described and interpreted below.
+We present a univariate analysis of the trajectories in the $x$, $y$, and $z$ directions. For each axis, we set the number of B-spline bases to $K_t = 10$ and fit the *flode* model in (\ref{eq:flode_mod}). The parameter $\alpha$ was initialized by performing a grid search over values in $[0, 14]$ to find the value, $\alpha_0$, that minimizes the model when each $\delta_i(t) = 0$. This $\alpha_0$ was then used as a starting value for the *flode* algorithm. The results of this analysis are described and interpreted below.
 
-Estimated values of the buffering parameter, are, for each axis,  $\widehat{\alpha}_x = 3.01$,   $\widehat{\alpha}_y = 3.50$, and $\widehat{\alpha}_z = 3.01$.  These values are close, indicating similar amounts of buffering across axes (\textcolor{red}{say more about buffering since that is the benefit of your model. Why might there be less buffering in the y direction?}). For Figure \ref{fig:paw_fits}, the first row shows observed (gray) and fitted (red) values for paw position. The second row shows random effects on the derivative scale for each trial, $\delta_i(t)$. The third row shows these random effects on the data scale, $\int_s e^{-\alpha (t-s)}\delta_i(s)ds$. The first, second, and third columns show results for the $x$, $y$, and $z$ axis, respectively.  The dotted line through each plot occurs at $t= 0.05$ seconds, which is the time of paw lift for each trial. The fitted values are capturing the data well. The random effects show more residual variance right after lift (during the time of the actual reach) than in other parts of the trial, suggesting that maybe there is something driving the reaching movement that we are not measuring (\textcolor{red}{why does this suggest that there is something driving the reach that we aren't measuring?}). Coefficient functions and coefficient surfaces are shown in Figures  \ref{fig:paw_betas} and  \ref{fig:paw_surfaces}, respectively. For surfaces we only show results from the $x$ axis; results from the $y$ and $z$ axes followed the same trends. 
+Estimated values of the buffering parameter, are, for each axis,  $\widehat{\alpha}_x = 3.01$,   $\widehat{\alpha}_y = 3.50$, and $\widehat{\alpha}_z = 3.01$.  These values are close, indicating similar amounts of buffering across axes. For Figure \ref{fig:paw_fits}, the first row shows observed (gray) and fitted (red) values for paw position. The second row shows random effects on the derivative scale for each trial, $\delta_i(t)$. The third row shows these random effects on the data scale, $\int_s e^{-\alpha (t-s)}\delta_i(s)ds$. The first, second, and third columns show results for the $x$, $y$, and $z$ axis, respectively.  The dotted line through each plot occurs at $t= 0.05$ seconds, which is the time of paw lift for each trial. The fitted values are capturing the data well. The random effects show more residual variance right after lift (during the time of the actual reach) than in other parts of the trial, suggesting that maybe there is something driving the reaching movement that we are not measuring. Coefficient functions and coefficient surfaces are shown in Figures  \ref{fig:paw_betas} and  \ref{fig:paw_surfaces}, respectively. For surfaces we only show results from the $x$ axis; results from the $y$ and $z$ axes followed the same trends. 
 
 # Discussion
 \label{sec:discussion}
 
-We present *flode*, a nonlinear regression model that has context in both functional data analysis and systems of ordinary differential equations. Drawing from both of these literatures is necessitated by our application; the differential equations formulation of our model allows for an interpretation of our paw data as trajectories whose speed and position are dynamically influenced by inputs from the brain, and tools from functional data analysis  allow us to efficiently model repeated observations that are trajectories while incorporating smoothness in the coefficient functions. Though we are motivated by a specific application in neurobiology, our methods are general and broadly useful for anyone trying to study a dynamical system of inputs and outputs where the outputs are functions over time. Our novel method compares favorably with historical functional regression in the simulation settings we examined, and produces reasonable results for our motivating data. Our methods are publicly available in an \texttt{R} package. (\textcolor{red}{needs to be cleaned up quite a bit and language is too informal throughout.})
+We present *flode*, a nonlinear regression model that has context in both functional data analysis and systems of ordinary differential equations. Drawing from both of these literatures is necessitated by our application; the differential equations formulation of our model allows for an interpretation of our paw data as trajectories whose speed and position are dynamically influenced by inputs from the brain, and tools from functional data analysis  allow us to efficiently model repeated observations that are trajectories while incorporating smoothness in the coefficient functions. Though we are motivated by a specific application in neurobiology, our methods are general and broadly useful for anyone trying to study a dynamical system of inputs and outputs where the outputs are functions over time. Our novel method compares favorably with historical functional regression in the simulation settings we examined, and produces reasonable results for our motivating data. Our methods are publicly available in an \texttt{R} package.
 
 We believe this work is an exciting addition to the burgeoning field of dynamic data analysis, with many possible future directions. A study on the asymptotics of the coefficients estimated in this model so that large sample confidence intervals and hypothesis tests can be computed would help researchers draw inferences about the relationships between inputs and outputs of the dynamical system. Extensions to include more complex systems of ordinary differential equations, including higher order and non-linear ODEs would increase the flexibility of our modeling framework and allow for the study of a larger class of repeated measurements of dynamical systems.
 

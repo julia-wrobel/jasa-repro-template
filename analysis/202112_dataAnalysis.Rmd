@@ -1,0 +1,523 @@
+---
+title: "Data analysis figures and results"
+author: "Julia Wrobel"
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
+output:
+  html_document: 
+    code_folding: hide
+    toc: true
+    toc_float: true
+hitheme: tomorrow
+highlighter: highlight.js
+---
+
+# Overview
+
+This file loads produces Figures and runs analysis using the real data.
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stringr)
+library(viridis)
+library(splines)
+library(refund)
+library(Matrix)
+library(mvtnorm)
+library(patchwork)
+library(gridExtra)
+library(pracma)
+library(tictoc)
+
+knitr::opts_chunk$set(echo = TRUE,
+  warning = FALSE,
+  fig.width = 9,
+  fig.height = 4,
+  fig.path = '../output/'
+)
+
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+
+source(here::here("preprocessing", "estimate_flode.R"))
+source(here::here("preprocessing", "utils.R"))
+source(here::here("preprocessing", "search_alpha.R"))
+```
+
+# Load paw data
+
+```{r data_import}
+
+load(here::here("data", "20180418_tidied_data.RDA"))
+```
+
+# Data info
+
+
+Get average lift and grab stats.
+
+```{r}
+
+paw_position %>% 
+  filter(type == "Control") %>%
+  summarize(mean(lift, na.rm = TRUE), sd(lift, na.rm = TRUE), 
+            mean(grab, na.rm = TRUE), sd(grab, na.rm = TRUE))
+
+```
+
+# Data cleaning
+
+Join the datasets
+
+```{r}
+observed_data = 
+	left_join(
+		seq_train %>% select(trial, type, gpfa) %>% unnest(cols = c(gpfa)),
+	  paw_position %>% unnest(cols = c(paw_position))) %>% 
+	mutate(sec_since_lift = seconds - lift,
+	       sec_since_grab = seconds - grab) %>% 
+	filter(sec_since_lift > -.05, sec_since_lift < .25,
+				 type == "Control") %>%
+	select(trial, sec_since_lift, px, py, pz) %>% 
+	gather(key = axis, value = observed, px:pz)
+```
+
+It is necessary that the data be evaluated on the same evenly spaced grid for each subject. In order to obtain this I interpolate the data to a different grid. 
+
+Also process raw spike trains for plotting. Also look at the paw trajectories before aligning them at the point of lift.
+
+```{r}
+D_paw = 30
+make_even_grid = function(data){
+	time = seq(-0.05, 0.25, length.out = D_paw)
+	even_fit = approx(data$sec_since_lift, data$value, xout = time, rule = 2)$y
+	
+	data.frame(sec_since_lift = time, value = even_fit)
+}
+
+paw_df = 
+	left_join(
+		seq_train %>% select(trial, type, gpfa) %>% unnest(cols = c(gpfa)),
+		paw_position %>% unnest(cols = c(paw_position))) %>% 
+    mutate(sec_since_lift = seconds - lift) %>% 
+    filter(sec_since_lift > -.05, sec_since_lift < .25, type == "Control") %>% 
+	select(trial, type, sec_since_lift, px, py, pz, starts_with("gpfa")) 
+
+even_paw = paw_df %>%
+	select(trial, type, sec_since_lift, starts_with("p")) %>%
+	gather(axis, value, starts_with("p")) %>%
+	nest(data = c(sec_since_lift, value)) %>%
+	mutate(even_data = map(data, make_even_grid)) %>% 
+	unnest(even_data) %>%
+	mutate(time = sec_since_lift - min(sec_since_lift), u = 1) %>%
+	select(trial, axis, sec_since_lift, time, u, value)
+
+even_gpfa = paw_df %>%
+	select(trial, type, sec_since_lift, starts_with("g")) %>%
+	gather(gpfa, value, starts_with("g")) %>%
+	nest(data = c(sec_since_lift, value)) %>%
+	mutate(even_data = map(data, make_even_grid)) %>% 
+	unnest(even_data) %>%
+	mutate(time = sec_since_lift - min(sec_since_lift)) %>%
+	rename(u_gpfa = value) %>%
+	select(trial, time, gpfa, u_gpfa) %>%
+	spread(gpfa, u_gpfa)
+	
+
+paw_df = left_join(even_paw, even_gpfa)
+
+firing_df = 
+	left_join(
+		seq_train %>% select(trial, type, neuron_fire) %>% 
+		  filter(type == "Control") %>%
+		  mutate(row = row_number()) %>% unnest(cols = c(neuron_fire)),
+		paw_position %>% filter(type == "Control") ) %>% 
+    #mutate(sec_since_lift = seconds - lift) %>% 
+    #filter(sec_since_lift > -.05, sec_since_lift < .25) %>% 
+  filter(seconds < 2) %>%
+  #mutate(time = sec_since_lift - min(sec_since_lift)) %>%
+	#select(row, trial, type, sec_since_lift, time, seconds, starts_with("loc")) 
+  arrange(type) %>%
+  select(row, trial, seconds, starts_with("loc"))
+
+```
+
+
+# Analysis
+
+
+## data organization
+
+We run the model on the three axes separately. 
+
+
+```{r}
+paw_x = paw_df %>%
+  filter(axis == "px") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+paw_y = paw_df %>%
+  filter(axis == "py") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+paw_z = paw_df %>%
+  filter(axis == "pz") %>%
+  group_by(trial) %>%
+  mutate(int = 1,
+         y0 = first(value),
+         time = time/0.3)  %>%
+  ungroup()
+
+```
+
+
+
+## modeling
+
+First we do a grid search to find the best initial value of $\alpha$. For the grid search we run the model without random effects, choosing a particular value of $\alpha$ and using the observed initial positions to calculate the value of the loss function at that particular $\alpha$.
+
+Run flode on the data and save flode data object. Only run the flode analysis if saved object doesn't exist.
+
+
+### px
+
+
+```{r px}
+filename = here::here("output", "px_results.RData")
+
+if(file.exists(filename)){
+	load(filename)
+}else{
+	tic()
+	# initiate alpha
+	alpha_start_px = search_alpha(data = paw_x, 
+														 forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																									"gpfa_4", "gpfa_5"),
+														 Kt = 20)
+	
+	# run flode
+	px_results = estimate_flode(paw_x, 
+															alpha0 = alpha_start_px$best_alpha, 
+                            	Kt = 20,
+															forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																										"gpfa_4", "gpfa_5"), 
+															max_iter = 500, 
+															tol = 0.000001, 
+															initial_position = TRUE,
+															random_effects = TRUE)
+	time_px = toc()
+
+	save(px_results, time_px, alpha_start_px, file = filename)
+}
+
+
+```
+
+### py
+
+
+```{r py}
+filename = here::here("output", "py_results.RData")
+
+if(file.exists(filename)){
+	load(filename)
+}else{
+	tic()
+	# initiate alpha
+	alpha_start_py = search_alpha(data = paw_y, 
+														 forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																									"gpfa_4", "gpfa_5"),
+														 Kt = 20)
+	
+	# run flode
+	py_results = estimate_flode(paw_y, 
+															alpha0 = alpha_start_py$best_alpha, 
+                            	Kt = 20,
+															forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																										"gpfa_4", "gpfa_5"), 
+															max_iter = 500, 
+															tol = 0.000001, 
+															initial_position = TRUE,
+															random_effects = TRUE)
+	time_py = toc()
+
+	save(py_results, time_py, alpha_start_py, file = filename)
+}
+
+```
+
+### pz
+
+
+```{r pz}
+filename = here::here("output", "pz_results.RData")
+
+if(file.exists(filename)){
+	load(filename)
+}else{
+	tic()
+	# initiate alpha
+	alpha_start_pz = search_alpha(data = paw_z, 
+														 forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																									"gpfa_4", "gpfa_5"),
+														 Kt = 20)
+	
+	# run flode
+	pz_results = estimate_flode(paw_z, 
+															alpha0 = alpha_start_pz$best_alpha, 
+                            	Kt = 20,
+															forcing_functions = c("int", "gpfa_1", "gpfa_2", "gpfa_3", 
+																										"gpfa_4", "gpfa_5"), 
+															max_iter = 500, 
+															tol = 0.000001, 
+															initial_position = TRUE,
+															random_effects = TRUE)
+	time_pz = toc()
+
+	save(pz_results, time_pz, alpha_start_pz, file = filename)
+}
+
+```
+
+
+# Summaries
+
+Below are the computation times for each axis.
+
+```{r}
+summary_stats = tibble(time_px = round(as.numeric( (time_px$toc-time_px$tic)/60), 2),
+       time_py = round(as.numeric( (time_py$toc-time_py$tic)/60), 2),
+       time_pz = round(as.numeric( (time_pz$toc-time_pz$tic)/60), 2),
+       alpha_px = px_results$alpha,
+       alpha_py = py_results$alpha,
+       alpha_pz = pz_results$alpha)
+
+# save summary stats so they can be read into manuscript Rmd file
+save(summary_stats, file = "../output/summarystats.rda")
+```
+
+
+
+* px: `r summary_stats$time_px` minutes
+* py: `r summary_stats$time_py` minutes
+* pz: `r summary_stats$time_pz` minutes
+
+
+Below are the estimated alpha for each axis:
+
+* px: $\alpha =$ `r summary_stats$alpha_px`
+* py: $\alpha =$ `r summary_stats$alpha_py`
+* pz: $\alpha =$ `r summary_stats$alpha_pz`
+
+
+# Figures
+
+## Figure 1
+
+Below are plots of the paw trajectories and gpfa values.
+
+* Called `fig_data_eda` in the manuscript
+
+```{r fig_data_eda, fig.width = 10, fig.height= 8}
+paw_plot = paw_df %>%
+  mutate(axis = case_when(
+    axis == "px" ~ "x-axis",
+    axis == "py" ~ "y-axis",
+    axis == "pz" ~ "z-axis"
+  )) %>%
+	ggplot(aes(sec_since_lift, value, group = trial)) +
+	geom_line(alpha = 0.25) +
+	labs(x = "seconds since lift", y = "position") +
+	facet_wrap(~axis, scales = "free_y") #+
+  #theme(axis.title.x = element_blank())
+
+
+neuron_plot = firing_df %>%
+    select(row, trial, seconds, loc_02, loc_06, loc_09) %>%
+    gather(key = loc, value = value, starts_with("loc")) %>%
+    mutate(spike = as.numeric( value > 0),
+           loc = str_replace(loc, "loc_0", "location ")) %>%
+    ggplot(aes(x = seconds, y = row)) + 
+    geom_tile(aes(fill = factor(spike))) +
+    scale_fill_viridis(discrete = TRUE) + 
+    #scale_fill_manual(values = c("lightblue", "darkblue")) +
+		labs(y = "trial") + 
+		facet_grid(.~loc) + 
+    theme(legend.position = "none",
+          axis.ticks=element_blank(),
+          axis.line=element_blank(),
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) +
+    scale_x_continuous(expand=c(0,0)) + 
+    scale_y_continuous(expand=c(0,0)) 
+
+
+gpfa_plot = paw_df %>% 
+	filter(axis == "px") %>%
+	gather(gpfa, x_value, gpfa_1:gpfa_5) %>%
+  mutate(gpfa = str_replace(gpfa, "_", " ")) %>%
+	ggplot(aes(sec_since_lift, x_value, group = trial)) +
+	geom_line(alpha = 0.2) +
+	labs(x = "seconds since lift", y = "value") +
+	facet_wrap(~ gpfa, scales = "free_y", ncol = 5)
+
+
+#p1 + (p2 + p3) + p4 + plot_layout(ncol = 1)
+(paw_plot + neuron_plot) + gpfa_plot + plot_layout(ncol = 1 )
+```
+
+## Figure 6
+
+* Called `fig_data_fits` in the manuscript
+
+### Data org
+
+Combine datasets from the three axes. 
+
+```{r}
+x_df = px_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "px") 
+
+y_df = py_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "py")
+
+z_df = pz_results$data %>% 
+  select(trial, time, value, yhat, delta, deltaStar) %>%
+  mutate(axis = "pz")
+
+
+flode_results = bind_rows(x_df, y_df, z_df) %>%
+  mutate(time = time * 0.3)
+
+```
+
+
+### Plots
+
+```{r fig_data_fits, fig.height= 10}
+fits = flode_results %>%
+	  mutate(axis = case_when(
+    axis == "px" ~ "x-axis",
+    axis == "py" ~ "y-axis",
+    axis == "pz" ~ "z-axis"
+  )) %>%
+  ggplot(aes(time, value, group = trial)) + 
+  geom_line(alpha = 0.5, color = "gray") +
+  geom_line(aes(y = yhat), alpha = 0.1, color = "darkred") +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+	labs(y = "Y(t)") +
+  facet_wrap(~ axis, scales = "free")
+
+delta = flode_results %>%
+		  mutate(axis = case_when(
+    axis == "px" ~ "x-axis",
+    axis == "py" ~ "y-axis",
+    axis == "pz" ~ "z-axis"
+  )) %>%
+  ggplot(aes(time, delta, group = trial)) + 
+  geom_line(alpha = 0.1) +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+	labs(y = "random effects, derivative scale") +
+  facet_wrap(~ axis)
+
+deltaStar = flode_results %>%
+		  mutate(axis = case_when(
+    axis == "px" ~ "x-axis",
+    axis == "py" ~ "y-axis",
+    axis == "pz" ~ "z-axis"
+  )) %>%
+  ggplot(aes(time, deltaStar, group = trial)) + 
+  geom_line(alpha = 0.1) +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "blue") +
+	labs(y = "random effects, data scale") +
+  facet_wrap(~ axis)
+
+fits  +  deltaStar + delta  + plot_layout(ncol = 1)
+```
+
+
+## Figure 7
+
+* Called `fig_data_beta` in the manuscript
+
+
+
+### Data org
+
+
+```{r}
+# betas
+beta_results = bind_rows(px_results$beta %>% mutate(axis = "px"),
+          py_results$beta %>% mutate(axis = "py"),
+          pz_results$beta %>% mutate(axis = "pz")) %>%
+  mutate(time = time * 0.3)
+
+```
+
+### Plot
+
+
+```{r fig_data_beta}
+beta_results %>%
+  gather(beta, value, starts_with("beta"))  %>%
+  ggplot(aes(time, value, group = axis, color = axis)) + 
+	geom_line() +
+  geom_vline(xintercept = 0.05, linetype = 2, color = "black") +
+  facet_wrap(~ beta) +
+  theme(legend.position = "bottom")
+
+```
+
+
+## Figure 8
+
+* Called `fig_data_surfaces` in the manuscript
+
+
+### Data org
+
+```{r}
+
+## for surfaces just look at paw X
+# now get surfaces
+make_surface_df = function(data, beta_num){
+  surface = data$surface[[beta_num]]
+  
+  
+  surface %>% as_tibble() %>%
+    mutate(t = attributes(surface)$t) %>%
+    gather(s, value, starts_with("s")) %>%
+    arrange(t) %>%
+    mutate(s = rep(attributes(surface)$s, 30),
+           label = paste0("beta", beta_num - 1))
+}
+
+surface_df = map_dfr(2:6, make_surface_df, data = px_results)
+
+```
+
+### Plot
+
+
+```{r fig_data_surfaces}
+surface_df %>%
+  mutate(value = ifelse(s <= t, value, NA),
+         s = s * 0.3,
+         t = t * 0.3) %>%
+  ggplot(aes(s, t)) + 
+  geom_tile(aes(fill = value, col = value)) + 
+  scale_fill_viridis_c() +
+  scale_colour_viridis_c() +
+  facet_wrap(~ label, , ncol = 5) +
+  theme(legend.position = "bottom")
+
+
+```
